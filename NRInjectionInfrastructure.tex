@@ -1,4 +1,5 @@
-\documentclass[a4paper, 11pt]{article}
+\documentclass[aps,prd,amssymb,amsmath,amsfonts,superscriptaddress,
+floatfix ,preprintnumbers,altaffilletter]{revtex4}
 
 \usepackage{epsfig}
 \usepackage{graphics}
@@ -10,34 +11,58 @@
 \usepackage{times}
 \usepackage{mathptmx}
 \usepackage{gensymb}
-\usepackage{fullpage}
+%\usepackage{fullpage}
 \usepackage{appendix}
-\usepackage{fontenc}
+%\usepackage{fontenc}
 \usepackage{listings}
+%\usepackage[utf8]{inputenc}
+%\usepackage{authblk}
+
+%%%%%Some new commands%%%%%%%%%%%%%%%%%
+\newcommand{\patricia}[1]{\textcolor{blue}{\textit{Patricia: #1}}}
+\newcommand{\ian}[1]{\textcolor{blue}{\textit{Ian: #1}}}
+
+\newcommand{\AEI}{Max Planck Institute for Gravitational Physics (Albert-Einstein-Institute), Am M\"uhlenberg 1, Potsdam-Golm, 14476, Germany}
+\newcommand{\Ligo}{LIGO Laboratory, California Institute of Technology, MS 100-36, Pasadena, California 91125, USA}
+\newcommand{\TAPIR}{Theoretical Astrophysics, Walter Burke Institute for Theoretical Physics, California Institute of Technology, Pasadena, California 91125, USA}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%
 \begin{document}
 %%%%%%%%%%
 
 \title{Numerical Relativity Injection Infrastructure}
-\author{Patricia Schmidt and Ian Harry}
+
+\author{Patricia Schmidt}
+\affiliation{\Ligo}
+\affiliation{\TAPIR}
+
+\author{Ian W. Harry}
+\affiliation{\AEI}
+
 \date{\today}
 
-\maketitle
+\begin{flushright}
+LIGO Document DCC
+\end{flushright}
 
 %%%%%%%%%%%%%%%
-\section*{Abstract}
+\begin{abstract}
 \label{sec:abs}
 %%%%%%%%%%%%%%%
-This technical document details the standardised infrastructure in the LIGO Algorithms Library (LAL), 
-which allows for the usage of Numerical Relativity (NR) waveforms as a discreet waveform approximant
-in LIGO data analysis. 
+This technical LIGO document describes the new standardised infrastructure in the LIGO Algorithms Library (LAL), 
+which henceforth allows for the usage of Numerical Relativity (NR) waveforms as a discrete waveform approximant
+in LIGO data analysis via the regular interfaces.
+\end{abstract}
+
+%%%%%%%%%%%%%%%
+\maketitle 
 
 %%%%%%%%%%%%%%%
 \section{Introduction}
 \label{sec:intro}
 %%%%%%%%%%%%%%%
-Gravitational waveforms from coalescing compact binary systems are commonly used in LIGO data analysis.
+Gravitational waveforms from coalescing compact binary systems play a critical role in LIGO data analysis.
 Whilst for low-mass systems only the early part of the inspiral is accessible to LIGO, for high-mass systems 
 also the later stages of the binary evolution, in particular the merger and final ringdown, may enter the LIGO
 sensitivity band. The waveforms in the early part of the binary coalescence are accurately described by 
@@ -45,10 +70,10 @@ analytic post-Newtonian of the Einstein field equations, but the final stages re
 of the field equations. So far, NR merger waveforms have been used to calibrate analytic waveform models,
 and to test those models against independent NR waveforms not used in the construction. 
 
-However, in the advanced detector era, we may wish to directly use NR waveforms in gravitational-wave searches,
-parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within
+However, in the advanced detector era, we may wish to directly use NR waveforms in gravitational-wave searches
+and parameter estimation to test General Relativity and to assess the systematics of analytic waveforms models within
 a uniform framework. To do so, we have recently developed a simple infrastructure to allow for the treatment of
-NR waveforms as a ``discreet'' waveform approximant. 
+NR waveforms as a ``discrete'' waveform approximant. 
 
 Previously, hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown waveform have been
 used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects. The new injection infrastructure
@@ -93,7 +118,7 @@ As for any wave, we can also write each gravitational-wave mode $h_{\ell m}$ as 
 $\Phi_{\ell m}$,
 \begin{equation}
 \label{ }
-h_{\ell m}(t) = A_{\ell m}(t)e^{i\Phi_{\ell m}}.
+h_{\ell m}(t) = A_{\ell m}(t)e^{i\Phi_{\ell m}(t)}.
 \end{equation}
 The amplitude of each mode is its complex norm, the phase is unwrapped argument of the complex time series $h_{\ell m}$. 
 
@@ -111,7 +136,7 @@ they are, we choose the reduce the data load and therefore also the I/O time by 
 The 1D spline compression is performed separately for each amplitude $A_{\ell m}$ and phase $\Phi_{\ell m}$. The compression is
 achieved by applying a greedy algorithm to the NR data, which selects the near-optimal points to construct a univariate spline interpolant
 with a specified global accuracy. By default, the interpolants are constructed using fifth degree polynomials and a tolerance of $10^{-6}$,
-i.e. if the spline is evaluated at the discreet times $t_i$ of the NR data, the original NR values are recovered with an error smaller than the
+i.e. if the spline is evaluated at the discrete times $t_i$ of the NR data, the original NR values are recovered with an error smaller than the
 specified tolerance. For further details of this method and the accuracy of the obtained interpolants, we refer the reader to \cite{}. 
 To perform the spline compression, the publicly available python package ``romSpline'' by Chad R. Galley is used \cite{}. \\
 
@@ -132,27 +157,29 @@ before constructing the interpolants.
 %%%%%%%%%%%%%%%
 Each HDF5 has to include a minimal set of metadata associated with the NR simulation stored as attributes of the HDF5 file. 
 More metadata can be added as desired but the minimal requirement are the following: \\
-\newline
-{[}NR-group{]}: a string to identify the NR group/code \\
-{[}type{]}: a brief description of the simulation, e.g. aligned-spins, precessing etc. \\
-{[}name{]}: list here alternative names or internal identifiers of the simulation \\
-{[}eta{]}: the symmetric mass ratio of the binary system \\
-{[}f\textunderscore lower\textunderscore at\textunderscore 1MSUN{]}: frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to 1 solar mass \\
-{[}coa\textunderscore phase{]}: this is twice the orbital reference phase at the beginning of the waveform \\
-{[}spin1x{]}, {[}spin1y{]}, {[}spin1z{]}: spin components of the spin on the larger object measured w.r.t. to the orbital angular momentum L at the beginning of the waveform \\
-{[}spin2x{]}, {[}spin2y{]}, {[}spin2z{]}: spin components of the spin on the smaller object measured w.r.t. to the orbital angular momentum L at the beginning of the waveform \\
-\\ To reduce potential ambiguities and to enable the usage of waveforms from matter simulations, we further recommend adding the following metadata: \\
-{[}object1{]}, {[}object2{]}: a string to identify the object type, e.g. black hole, neutron star \\
-{[}mass1{]}, {[}mass2{]}: matter simulations have a mass scale, hence the not only the mass ratio but also the individual masses need to be accessible\\
-{[}eccentricity{]}: eccentricity parameter of the simulation\\
-{[}NR\textunderscore frame{]}: the coordinate system used for the waveform extraction, e.g. inertial, J-aligned etc. \\
-{[}J\textunderscore hat{]}: the direction of the total angular momentum at the beginning of the waveform\\
-{[}L\textunderscore hat{]}: the direction of the orbital angular momentum at the beginning of the waveform \\
-{[}PN\textunderscore approximant{]}: string identifier for the inspiral if hybrid data are stored \\
-\\ The spin measurements and the orbital phase at the beginning of the waveform have to be measured in a frame where the instantaneous orbital plane
-lies in the xy-plane and $\hat{L}$ points along the z-axis. 
-
-For complete reproducibility and transparency, we recommend to store an NR metadata files and the original NR times $t_i$ as datasets in the HDF5 file.
+\begin{itemize}
+\item {[}NR-group{]}: a string to identify the NR group/code
+\item {[}type{]}: a brief description of the simulation, e.g. aligned-spins, precessing etc.
+\item{[}name{]}: list here alternative names or internal identifiers of the simulation
+\item{[}eta{]}: the symmetric mass ratio of the binary system
+\item{[}f\textunderscore lower\textunderscore at\textunderscore 1MSUN{]}: frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to 1 solar mass
+\item{[}coa\textunderscore phase{]}: this is twice the orbital reference phase at the beginning of the waveform
+\item{[}spin1x{]}, {[}spin1y{]}, {[}spin1z{]}: spin components of the spin on the larger object measured w.r.t. to the orbital angular momentum L at the beginning of the waveform
+\item{[}spin2x{]}, {[}spin2y{]}, {[}spin2z{]}: spin components of the spin on the smaller object measured w.r.t. to the orbital angular momentum L at the beginning of the waveform
+\end{itemize}
+To reduce potential ambiguities and to enable the usage of waveforms from matter simulations, we further recommend adding the following  additional metadata:
+\begin{itemize}
+\item{[}object1{]}, {[}object2{]}: a string to identify the object type, e.g. black hole, neutron star
+\item{[}mass1{]}, {[}mass2{]}: matter simulations have a mass scale, hence not only the mass ratio but also the individual masses need to be accessible
+\item{[}eccentricity{]}: eccentricity parameter of the simulation
+\item{[}NR\textunderscore frame{]}: the coordinate system used for the waveform extraction, e.g. inertial, J-aligned etc.
+\item{[}J\textunderscore hat{]}: the direction of the total angular momentum at the beginning of the waveform
+\item{[}L\textunderscore hat{]}: the direction of the orbital angular momentum at the beginning of the waveform
+\item{[}PN\textunderscore approximant{]}: string identifier for the inspiral if hybrid data are stored
+\end{itemize}
+The spin measurements and the orbital phase at the beginning of the waveform have to be measured in a frame where the instantaneous orbital plane
+lies in the xy-plane and $\hat{L}$ points along the z-axis. \\
+\\ For complete reproducibility and transparency, we recommend to store any NR metadata files and the original NR times $t_i$ as a datasets in the HDF5 file.
 
 %%%%%%%%%%%%%%%
 \section{Generating NR waveforms}
@@ -166,17 +193,17 @@ are performed to guarantee the consistency between the values passed
 in the waveform generation call and metadata values. \\
 \\For a given starting frequency and total mass, a time array is allocated based on an estimate of the waveform length. We use the LAL function 
 \texttt{SimIMRSEOBNRv2ChirpTimeSingleSpin()} plus an extra 10\% leverage to estimate the waveform length. If the NR waveforms are not long
-enough, the generation is aborted. From the estimated length and the desired sampling rate, the discreet time series for the spline evaluation is
+enough, the generation is aborted. From the estimated length and the desired sampling rate, the discrete time series for the spline evaluation is
 determined.
 
-To construct the polarisation $h_+$ and $h_\times$, the splines for each amplitude and phase are evaluated at the points in the discreet time times, 
+To construct the polarisation $h_+$ and $h_\times$, the splines for each amplitude and phase are evaluated at the points in the discrete time times, 
 weighted by the ${}^{-2}Y_{lm}$, and summed up:
 \begin{align}
 \label{}
     \mathrm{Re}(h_{\ell m}) &= A_{\ell m} \cos(\Phi_{\ell m}),   \\
     \mathrm{Im}(h_{\ell m}) &= A_{\ell m} \sin(\Phi_{\ell m}),   \\
-    h_+ &= \sum_{\ell, m} \mathrm{Re}(h) \mathrm{Re}({}^{-2}Y_{\ell m}) + \mathrm{Im}(h) \mathrm{Im}({}^{-2}Y_{\ell m}), \\
-    h_\times &= \sum_{\ell, m} \mathrm{Re}(h) \mathrm{Im}({}^{-2}Y_{\ell m}) - \mathrm{Im}(h) \mathrm{Re}({}^{-2}Y_{\ell m}),
+    h_+ &= \sum_{\ell, m} \mathrm{Re}(h_{\ell m}) \mathrm{Re}({}^{-2}Y_{\ell m}) + \mathrm{Im}(h_{\ell m}) \mathrm{Im}({}^{-2}Y_{\ell m}), \\
+    h_\times &= \sum_{\ell, m} \mathrm{Re}(h_{\ell m}) \mathrm{Im}({}^{-2}Y_{\ell m}) - \mathrm{Im}(h_{\ell m}) \mathrm{Re}({}^{-2}Y_{\ell m}),
 \end{align}
 where the polar angle $\theta$ denotes the angle between the orbital angular momentum and the line-of-sight and the azimuthal
 angle $\phi$ is the sum of parameter value 'coa\textunderscore phase' and any reference phase passed in the waveform generator function.
@@ -189,15 +216,21 @@ the splines are constructed from the HDF5 file via the python function \texttt{U
 is performed. Fig. XX shows a comparison between NR waveforms obtained using the the pyCBC and the LAL waveform generators. The mismatch
 between the waveforms is less than $10^{-7}$. This is consistent with the level of disagreement expected due to the different numerical interpolation
 routines. \\
-The source codes can be found in lalsuite/lalsimulation/src/LALSimIMRNRWaveforms.c and 
-pycbc/pycbc/waveforms/nr\textunderscore waveform.py respectively.
+The source codes can be found in \texttt{lalsuite/lalsimulation/src/LALSimIMRNRWaveforms.c} and 
+\texttt{pycbc/pycbc/waveforms/nr\textunderscore waveform.py} respectively.
 
 %%%%%%%%%%
 \subsection{Examples}
 %%%%%%%%%%
-The pyCBC implementation of the waveform generator may be called in the following way: \\
+There are a variety of different ways to generate waveforms using LIGO data analysis software. Here, we give two specific examples
+for function calls in python, firstly directly via the pyCBC implementation, and secondly through the SWIG-wrapped version of 
+lalsimulation. 
+
+\begin{enumerate}
+  \item The pyCBC implementation of the waveform generator may be called in the following way through python: \\
 \begin{lstlisting}
 from pycbc.waveform import get_td_waveform 
+
 hp, hc = get_td_waveform(approximant='NR_hdf5_pycbc', 
                          numrel_data='/PATH/TO/HDF5',
                          mass1, mass2,
@@ -207,24 +240,66 @@ hp, hc = get_td_waveform(approximant='NR_hdf5_pycbc',
                          inclination, distance, 
                          coa_phase)
 \end{lstlisting}
-To use the implementation in LALSimulation through SWIG, use the following function call:\\
-\begin{lstlisting}
+
+\item To use the implementation in LALSimulation through SWIG, use the following function call in python:\\
+\begin{lstlisting}[mathescape=true]
 import lalsimulation as lalsim
+
 flags = lalsim.SimInspiralCreateWaveformFlags()
+
 lalsim.SimInspiralSetNumrelData(flags,'/PATH/TO/HDF5')
+
 hp, hc = lalsim.SimInspiralChooseTDWaveform(phiRef, 
               deltaT, m1 * MSUN_SI, m2 * MSUN_SI, 
               s1x, s1y, s1z,
               s2x, s2y, s2z, 
               fStart, fRef, 
-              distance, inclination, 
-              0, 0, flags, None, -1, -1, 
-              approximant=lalsim.NR_hdf5)
+              distance, inclination,
+              $\lambda_1=0$, $\lambda_2=0$, 
+              flags, nonGRparams=None, 
+              amplitudeO=-1, phaseO=-1, 
+              approximant=lalsim.NR_hdf5),
 \end{lstlisting}
+where $\lambda_1$ denote the tidal deformation parameters, which vanish in the case of black holes. 
+\end{enumerate}
+Fig.~\ref{fig:waveforms} shows the two waveform polarizations $h_+$ and $h_times$ for the binary black hole hole case simulated in case 
+SXS:BBH:0019 from the public SXS catalogue \cite{} for a total mass of 50 $\mathrm{M}_\odot$. The dimensionless spins for this simulation are
+$\vec{\chi}_1=(0,0,-0.5)$ and $\vec{\chi}_2=(0,0,0.499)$ and the component masses are $m_1=30.01360$ and $m_2=20.00954$.
+As extrinsic parameters, we choose the following: distance=100Mpc, inclination=0.4rad, deltaT=1.0/16384, fStart=fRef=18.88Hz. We do not alter
+the reference phase but instead pass the metadata value stored in the HDF5 file.
+The match between the waveforms obtained from the two numerical implementations is $\mathcal{M}=0.999999999341$.
+\begin{figure}
+\begin{center}
+\includegraphics[width=80mm]{lalsim_TD_0019.png}
+\includegraphics[width=80mm]{pycbc_TD_0019.png}
+\caption{The waveform polarizations $h_+$(solid, red) and $h_\times$(dashed, blue) of the publicly available SXS waveform SXS:BBH:0019 
+generated via the waveform interface in lalsimulation (left panel) and in pyCBC (right panel).}
+\label{fig:waveforms}
+\end{center}
+\end{figure}
+
+
 %%%%%%%%%%
-%\appendix{Conventions and frame choices}
+\section{Discussion}
+\label{sec:discussion}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%Acknowledgements%%%%%%%%%%%%%%%%%%%%
+\section*{Acknowledgments}
+We thank Kent Blackburn for carefully reading through the manuscript and providing useful comments.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%Appendices%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+%%%%%%%%%
+\section{Conventions and frame choices}
+\label{sec:conv}
 %%%%%%%%%%
 
+
+%%%%%References%%%%%%%%%%%%%%%%%
+
+\bibliography{nrinj}
 
 %%%%%%%%%%
 \end{document}
