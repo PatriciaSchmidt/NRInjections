@@ -1,4 +1,4 @@
-\documentclass[a4paper, 11pt, titlepage]{article}
+\documentclass[a4paper, 11pt]{article}
 
 \usepackage{epsfig}
 \usepackage{graphics}
@@ -12,6 +12,8 @@
 \usepackage{gensymb}
 \usepackage{fullpage}
 \usepackage{appendix}
+\usepackage{fontenc}
+\usepackage{listings}
 
 %%%%%%%%%%
 \begin{document}
@@ -24,9 +26,205 @@
 \maketitle
 
 %%%%%%%%%%%%%%%
+\section*{Abstract}
+\label{sec:abs}
+%%%%%%%%%%%%%%%
+This technical document details the standardised infrastructure in the LIGO Algorithms Library (LAL), 
+which allows for the usage of Numerical Relativity (NR) waveforms as a discreet waveform approximant
+in LIGO data analysis. 
+
+%%%%%%%%%%%%%%%
 \section{Introduction}
 \label{sec:intro}
 %%%%%%%%%%%%%%%
+Gravitational waveforms from coalescing compact binary systems are commonly used in LIGO data analysis.
+Whilst for low-mass systems only the early part of the inspiral is accessible to LIGO, for high-mass systems 
+also the later stages of the binary evolution, in particular the merger and final ringdown, may enter the LIGO
+sensitivity band. The waveforms in the early part of the binary coalescence are accurately described by 
+analytic post-Newtonian of the Einstein field equations, but the final stages require the full non-linear solution
+of the field equations. So far, NR merger waveforms have been used to calibrate analytic waveform models,
+and to test those models against independent NR waveforms not used in the construction. 
+
+However, in the advanced detector era, we may wish to directly use NR waveforms in gravitational-wave searches,
+parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within
+a uniform framework. To do so, we have recently developed a simple infrastructure to allow for the treatment of
+NR waveforms as a ``discreet'' waveform approximant. 
+
+Previously, hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown waveform have been
+used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects. The new injection infrastructure
+supersedes the previous method.
+
+The remainder of this technical document is organised as follows: In Sec. \ref{sec:format} we give a brief introduction
+to the format of the NR waveform data. In Sec. \ref{sec:gen} we describe the code basics and how NR waveforms
+are generated in LAL/pyCBC.
+
+%%%%%%%%%%%%%%%
+\section{Waveform Format}
+\label{sec:format}
+%%%%%%%%%%%%%%%
+In a Numerical Relativity simulation, one solves for the complete space-time of the binary system. For data analysis
+purposes however, one requires the gravitational-wave strain $h(t)$ far from the source. The relevant numerical quantity
+is the metric perturbation $h^{TT}_{ij}$ as computed in the transverse-traceless gauge (TT). 
+
+There are different way of computing the metric perturbation from a numerical evolution. The most common methods include
+the use of the complex Weyl scalar $\Psi_4$, which is related to the metric perturbation via two time derivatives, or the
+Regge-Wheeler-Zerilli formalism computes the metric perturbation in the wave-zone as a perturbation of the Schwarzschild
+spacetime. 
+
+In the TT gauge, the metric perturbation
+has two independent real polarisations, $h_+$ and $h_\times$, which are related to the complex strain by
+\begin{equation}
+\label{ }
+h = h_+ - i h_\times \in \mathbb{C},
+\end{equation}
+where $h_+, h_\times \in \mathbb{R}$.
+
+Let $(t,x,y,z)$ be a Cartesian coordinate system in the wave-zone, which is related to the polar coordinates $(r, \theta, \phi)$ by the standard means. 
+In this coordinate system, the metric perturbation is commonly decomposed into modes
+in a basis of spin-weighted spherical harmonics, ${}^{-2}Y_{\ell m}$, of spin weight $s=-2$, where the GW propagation direction is
+the radial unit vector r.
+For any point $(\theta, \phi)$ on the unit sphere, the GW strain can then be shown to take the following form:
+\begin{equation}
+\label{ }
+h(t; \theta, \phi) = h_+ - i h_\times = \sum_{\ell=2}^\infty \sum_{m=-\ell}^{\ell} h_{\ell m}(t) {}^{-2}Y_{\ell m}(\theta,\phi).
+\end{equation}
+
+As for any wave, we can also write each gravitational-wave mode $h_{\ell m}$ as an amplitude $A_{\ell m}$ and a phase
+$\Phi_{\ell m}$,
+\begin{equation}
+\label{ }
+h_{\ell m}(t) = A_{\ell m}(t)e^{i\Phi_{\ell m}}.
+\end{equation}
+The amplitude of each mode is its complex norm, the phase is unwrapped argument of the complex time series $h_{\ell m}$. 
+
+%%%%%%%%%%%%%%%
+\subsection{Spline Compression}
+\label{sec:spline}
+%%%%%%%%%%%%%%%
+Gravitational waveforms for LIGO data analysis purposes require uniform sampling in time for a given sampling frequency $f_s$.
+NR datasets however, are commonly not uniformly sampled and if they are, the sampling interval $dt$ may not necessarily
+correspond to the one required by the sampling rate. It is therefore unavoidable to interpolate the NR data such that for any total
+mass M and sampling rate the NR waveforms can be resampled accordingly. Whilst the NR data could simply be interpolated as
+they are, we choose the reduce the data load and therefore also the I/O time by performing 1D spline compression on the NR data
+\cite{}. This is a particular advantage for long simulations or hybrid data. \\
+
+The 1D spline compression is performed separately for each amplitude $A_{\ell m}$ and phase $\Phi_{\ell m}$. The compression is
+achieved by applying a greedy algorithm to the NR data, which selects the near-optimal points to construct a univariate spline interpolant
+with a specified global accuracy. By default, the interpolants are constructed using fifth degree polynomials and a tolerance of $10^{-6}$,
+i.e. if the spline is evaluated at the discreet times $t_i$ of the NR data, the original NR values are recovered with an error smaller than the
+specified tolerance. For further details of this method and the accuracy of the obtained interpolants, we refer the reader to \cite{}. 
+To perform the spline compression, the publicly available python package ``romSpline'' by Chad R. Galley is used \cite{}. \\
+
+Once the spline interpolants have been obtained, they are stored as individual groups in a single HDF5 file with the following group naming
+conventions: 
+\begin{itemize}
+  \item Amplitude group: \textbf{amp\textunderscore l\#1\textunderscore m\#2}
+  \item Phase group: \textbf{phase\textunderscore  l\#1\textunderscore m\#2},
+\end{itemize}
+where (\#1, \#2) are placeholders for $(\ell, m)$, e.g. phase\textunderscore l2\textunderscore m-2. \\
+\\We note that for NR data without a hybridised PN inspiral, the initial junk radiation needs to be removed before the spline interpolants are constructed. 
+Following the LAL waveform convention, the waveforms also need to be aligned such that the peak of the waveform occurs at $t_\mathrm{peak}=0$ 
+before constructing the interpolants.
+
+%%%%%%%%%%%%%%%
+\subsection{Metadata}
+\label{sec:meta}
+%%%%%%%%%%%%%%%
+Each HDF5 has to include a minimal set of metadata associated with the NR simulation stored as attributes of the HDF5 file. 
+More metadata can be added as desired but the minimal requirement are the following: \\
+\newline
+{[}NR-group{]}: a string to identify the NR group/code \\
+{[}type{]}: a brief description of the simulation, e.g. aligned-spins, precessing etc. \\
+{[}name{]}: list here alternative names or internal identifiers of the simulation \\
+{[}eta{]}: the symmetric mass ratio of the binary system \\
+{[}f\textunderscore lower\textunderscore at\textunderscore 1MSUN{]}: frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to 1 solar mass \\
+{[}coa\textunderscore phase{]}: this is twice the orbital reference phase at the beginning of the waveform \\
+{[}spin1x{]}, {[}spin1y{]}, {[}spin1z{]}: spin components of the spin on the larger object measured w.r.t. to the orbital angular momentum L at the beginning of the waveform \\
+{[}spin2x{]}, {[}spin2y{]}, {[}spin2z{]}: spin components of the spin on the smaller object measured w.r.t. to the orbital angular momentum L at the beginning of the waveform \\
+\\ To reduce potential ambiguities and to enable the usage of waveforms from matter simulations, we further recommend adding the following metadata: \\
+{[}object1{]}, {[}object2{]}: a string to identify the object type, e.g. black hole, neutron star \\
+{[}mass1{]}, {[}mass2{]}: matter simulations have a mass scale, hence the not only the mass ratio but also the individual masses need to be accessible\\
+{[}eccentricity{]}: eccentricity parameter of the simulation\\
+{[}NR\textunderscore frame{]}: the coordinate system used for the waveform extraction, e.g. inertial, J-aligned etc. \\
+{[}J\textunderscore hat{]}: the direction of the total angular momentum at the beginning of the waveform\\
+{[}L\textunderscore hat{]}: the direction of the orbital angular momentum at the beginning of the waveform \\
+{[}PN\textunderscore approximant{]}: string identifier for the inspiral if hybrid data are stored \\
+\\ The spin measurements and the orbital phase at the beginning of the waveform have to be measured in a frame where the instantaneous orbital plane
+lies in the xy-plane and $\hat{L}$ points along the z-axis. 
+
+For complete reproducibility and transparency, we recommend to store an NR metadata files and the original NR times $t_i$ as datasets in the HDF5 file.
+
+%%%%%%%%%%%%%%%
+\section{Generating NR waveforms}
+\label{sec:gen}
+%%%%%%%%%%%%%%%
+Once the HDF5 file has been provided, the NR waveforms can be generated through the standard waveform interfaces \texttt{ChooseTDWaveform()} in LAL
+and \texttt{get\textunderscore td\textunderscore waveform()} in pyCBC. The approximant names are ``NR\textunderscore hdf5'' and ``NR\textunderscore hdf5\textunderscore pycbc'' respectively. 
+As opposed to continuous approximants, the spline data are read from file and evaluated for the desired extrinsic
+parameters. The intrinsic parameters in NR simulations are fixed, currently internal checks on the mass ratio and the spin components 
+are performed to guarantee the consistency between the values passed
+in the waveform generation call and metadata values. \\
+\\For a given starting frequency and total mass, a time array is allocated based on an estimate of the waveform length. We use the LAL function 
+\texttt{SimIMRSEOBNRv2ChirpTimeSingleSpin()} plus an extra 10\% leverage to estimate the waveform length. If the NR waveforms are not long
+enough, the generation is aborted. From the estimated length and the desired sampling rate, the discreet time series for the spline evaluation is
+determined.
+
+To construct the polarisation $h_+$ and $h_\times$, the splines for each amplitude and phase are evaluated at the points in the discreet time times, 
+weighted by the ${}^{-2}Y_{lm}$, and summed up:
+\begin{align}
+\label{}
+    \mathrm{Re}(h_{\ell m}) &= A_{\ell m} \cos(\Phi_{\ell m}),   \\
+    \mathrm{Im}(h_{\ell m}) &= A_{\ell m} \sin(\Phi_{\ell m}),   \\
+    h_+ &= \sum_{\ell, m} \mathrm{Re}(h) \mathrm{Re}({}^{-2}Y_{\ell m}) + \mathrm{Im}(h) \mathrm{Im}({}^{-2}Y_{\ell m}), \\
+    h_\times &= \sum_{\ell, m} \mathrm{Re}(h) \mathrm{Im}({}^{-2}Y_{\ell m}) - \mathrm{Im}(h) \mathrm{Re}({}^{-2}Y_{\ell m}),
+\end{align}
+where the polar angle $\theta$ denotes the angle between the orbital angular momentum and the line-of-sight and the azimuthal
+angle $\phi$ is the sum of parameter value 'coa\textunderscore phase' and any reference phase passed in the waveform generator function.
+\\
+Note that all waveform modes $(\ell, m)$ contained in the HDF5 file are used
+to compute the two polarisations. \\
+\\
+The compressed NR data files do not store the splines themselves, but the knots, errors, the polynomial degree etc. In the pyCBC implementation,
+the splines are constructed from the HDF5 file via the python function \texttt{UnivariateSpline}, in the LAL implementation regular GSL interpolation
+is performed. Fig. XX shows a comparison between NR waveforms obtained using the the pyCBC and the LAL waveform generators. The mismatch
+between the waveforms is less than $10^{-7}$. This is consistent with the level of disagreement expected due to the different numerical interpolation
+routines. \\
+The source codes can be found in lalsuite/lalsimulation/src/LALSimIMRNRWaveforms.c and 
+pycbc/pycbc/waveforms/nr\textunderscore waveform.py respectively.
+
+%%%%%%%%%%
+\subsection{Examples}
+%%%%%%%%%%
+The pyCBC implementation of the waveform generator may be called in the following way: \\
+\begin{lstlisting}
+from pycbc.waveform import get_td_waveform 
+hp, hc = get_td_waveform(approximant='NR_hdf5_pycbc', 
+                         numrel_data='/PATH/TO/HDF5',
+                         mass1, mass2,
+                         spin1x, spin1y, spin1z,
+                         spin2x, spin2y, spin2z, 
+                         delta_t, f_lower, f_ref,
+                         inclination, distance, 
+                         coa_phase)
+\end{lstlisting}
+To use the implementation in LALSimulation through SWIG, use the following function call:\\
+\begin{lstlisting}
+import lalsimulation as lalsim
+flags = lalsim.SimInspiralCreateWaveformFlags()
+lalsim.SimInspiralSetNumrelData(flags,'/PATH/TO/HDF5')
+hp, hc = lalsim.SimInspiralChooseTDWaveform(phiRef, 
+              deltaT, m1 * MSUN_SI, m2 * MSUN_SI, 
+              s1x, s1y, s1z,
+              s2x, s2y, s2z, 
+              fStart, fRef, 
+              distance, inclination, 
+              0, 0, flags, None, -1, -1, 
+              approximant=lalsim.NR_hdf5)
+\end{lstlisting}
+%%%%%%%%%%
+%\appendix{Conventions and frame choices}
+%%%%%%%%%%
+
 
 %%%%%%%%%%
 \end{document}
