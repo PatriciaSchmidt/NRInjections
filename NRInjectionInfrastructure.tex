@@ -222,7 +222,7 @@ to compute the two polarisations. \\
 \\
 The compressed NR data files do not store the splines themselves, but the knots, errors, the polynomial degree etc. In the pyCBC implementation,
 the splines are constructed from the HDF5 file via the python function \texttt{UnivariateSpline}, in the LAL implementation regular GSL interpolation
-is performed. Fig. XX shows a comparison between NR waveforms obtained using the the pyCBC and the LAL waveform generators. The mismatch
+is performed. Fig.~\ref{fig:waveforms} shows an example comparison between NR waveforms obtained using the the pyCBC and the LAL waveform generators. The mismatch
 between the waveforms is less than $10^{-7}$. This is consistent with the level of disagreement expected due to the different numerical interpolation
 routines. \\
 The source codes can be found in \texttt{lalsuite/lalsimulation/src/LALSimIMRNRWaveforms.c} and 
@@ -291,6 +291,20 @@ generated via the waveform interface in lalsimulation (left panel) and in pyCBC 
 %%%%%%%%%%
 \section{Discussion}
 \label{sec:discussion}
+%%%%%%%%%%
+Due to the simplicity of the new infrastructure, NR waveforms can now almost be treated the same way as 
+regular analytic approximants. They can now fully be integrated in the data analysis pipelines, making them
+available to the available tools. In particular, this includes tests against template banks, faithfulness calculations
+and the usage in parameter estimation via the generation of gwf frame files. Work is in progress to fully integrate
+the new infrastructure into the parameter estimation pipeline \texttt{lalinference}.
+
+However, in its current state there are a few caveats, which we plan to investigate with the waveform review committee
+in order to obtain the optimal solution. As opposed to the continuous waveform approximants, at the moment the metadata
+are only referring to the beginning of the waveform and not some reference time, which can be chosen freely. While this is 
+not a problem for aligned-spin binaries, this poses a rather big problem for precessing simulations. To fully integrate this
+desired freedom, additional information needs to be incorporated into the HDF5 files and the waveform generator
+accordingly. In particular, the relevant information would have to include the spins as a function of frequency as well
+as the orbital angular momentum direction. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%Acknowledgements%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgments}
@@ -308,7 +322,11 @@ choices must be considered.
 
 The current setup is as follows: At the start of the waveform, i.e. the first entry in the NR time series considered in the
 HDF5 file, the instantaneous orbital, characterized by its orthonormal direction $\hat{L}$, has some (arbitrary) orientation
-in the Cartesian simulation frame $(x, y, z)$ of the NR simulation. 
+in the Cartesian simulation frame $(x, y, z)$ of the NR simulation. The polar angle between the line-of-sight $\hat{N}$ and the instantaneous orbital angular momentum direction is denoted as $\theta$ and corresponds to the option parameter ``inclination'' in the waveform generator functions. 
+
+If the NR simulation frame is such that $\hat{L}$ does not point along the z-axis at the begin of the waveform, the additional angle between $\hat{L}$ and the z-axis needs to be taken into account when setting the value for the inclination parameter. Currently, it is up to the user to take care of this, but we aim to integrate this into the waveform generator. 
+
+The azimuthal angle $\phi$ denotes the instantaneous orientation of the orbital separation at the beginning of the waveform in the source frame, where $\hat{L}$ points along the z-axis. The metadata parameter ``coa\textunderscore phase'' is twice this angle.
 
 \begin{figure}[!h]
 \begin{center}
