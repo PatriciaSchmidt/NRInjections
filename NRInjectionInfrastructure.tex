@@ -64,24 +64,31 @@ in LIGO data analysis via the regular interfaces.
 %%%%%%%%%%%%%%%
 Gravitational waveforms from coalescing compact binary systems play a critical role in LIGO data analysis.
 Whilst for low-mass systems only the early part of the inspiral is accessible to LIGO, for high-mass systems 
-also the later stages of the binary evolution, in particular the merger and final ringdown, may enter the LIGO
-sensitivity band. The waveforms in the early part of the binary coalescence are accurately described by 
-analytic post-Newtonian of the Einstein field equations, but the final stages require the full non-linear solution
-of the field equations. So far, NR merger waveforms have been used to calibrate analytic waveform models,
-and to test those models against independent NR waveforms not used in the construction. 
+also the later stages of the binary evolution, in particular the merger and final ringdown, are visible in the LIGO
+sensitivity band. 
+
+Whilst the waveforms during the early part of the binary coalescence are accurately described by an
+analytic post-Newtonian expansion of the Einstein field equations, the final stages require the full non-linear solution
+of the field equations. So far, NR merger waveforms have predominantly been used to calibrate analytic waveform models
+and to test those models against independent NR waveforms not used in the construction~\cite{}. 
 
 However, in the advanced detector era, we may wish to directly use NR waveforms in gravitational-wave searches
 and parameter estimation to test General Relativity and to assess the systematics of analytic waveforms models within
 a uniform framework. To do so, we have recently developed a simple infrastructure to allow for the treatment of
-NR waveforms as a ``discrete'' waveform approximant. 
+NR waveforms as a ``discrete'' waveform approximant provided the NR data are available in a specific format. 
+This allows the to easily integrate NR waveforms into already existing data analysis pipelines.
 
-Previously, hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown waveform have been
-used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects. The new injection infrastructure
-supersedes the previous method.
+Previously, hybrid waveforms of binary black holes constructed by combining a PN inspiral with an NR merger-ringdown 
+waveform have been
+used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}. Whilst this required the
+NR waveforms to be resampled at uniform times \textbf{before} inserting the mass scale, the new infrastructure uses a highly
+compressed data format to represent the NR data. Additionally, 1D spline interpolants are used to allow for the resampling
+of the waveforms \textbf{after} the mass scale has been inserted, which avoids the storage of large data sets.
+The new injection infrastructure supersedes the previous method.
 
 The remainder of this technical document is organised as follows: In Sec. \ref{sec:format} we give a brief introduction
 to the format of the NR waveform data. In Sec. \ref{sec:gen} we describe the code basics and how NR waveforms
-are generated in LAL/pyCBC.
+are generated in LAL/pyCBC. We highlight caveats and desired future improvements in Sec.~\ref{sec:discussion}.
 
 %%%%%%%%%%%%%%%
 \section{Waveform Format}
@@ -130,15 +137,14 @@ Gravitational waveforms for LIGO data analysis purposes require uniform sampling
 NR datasets however, are commonly not uniformly sampled and if they are, the sampling interval $dt$ may not necessarily
 correspond to the one required by the sampling rate. It is therefore unavoidable to interpolate the NR data such that for any total
 mass M and sampling rate the NR waveforms can be resampled accordingly. Whilst the NR data could simply be interpolated as
-they are, we choose the reduce the data load and therefore also the I/O time by performing 1D spline compression on the NR data
-\cite{}. This is a particular advantage for long simulations or hybrid data. \\
+they are, we choose the reduce the data load and therefore also the I/O time by performing 1D spline compressions on the NR data~\cite{Galley:2015aa}. This is a particular advantage for long simulations or hybrid data, but also reduces the storage needed for pure NR data. \\
 
-The 1D spline compression is performed separately for each amplitude $A_{\ell m}$ and phase $\Phi_{\ell m}$. The compression is
+The 1D spline compression is performed separately for each mode amplitude $A_{\ell m}$ and phase $\Phi_{\ell m}$. The compression is
 achieved by applying a greedy algorithm to the NR data, which selects the near-optimal points to construct a univariate spline interpolant
 with a specified global accuracy. By default, the interpolants are constructed using fifth degree polynomials and a tolerance of $10^{-6}$,
 i.e. if the spline is evaluated at the discrete times $t_i$ of the NR data, the original NR values are recovered with an error smaller than the
-specified tolerance. For further details of this method and the accuracy of the obtained interpolants, we refer the reader to \cite{}. 
-To perform the spline compression, the publicly available python package ``romSpline'' by Chad R. Galley is used \cite{}. \\
+specified tolerance. For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{}. 
+To perform the spline compression, the publicly available python package ``romSpline'' by Chad R. Galley is used~\cite{}. \\
 
 Once the spline interpolants have been obtained, they are stored as individual groups in a single HDF5 file with the following group naming
 conventions: 
@@ -146,7 +152,8 @@ conventions:
   \item Amplitude group: \textbf{amp\textunderscore l\#1\textunderscore m\#2}
   \item Phase group: \textbf{phase\textunderscore  l\#1\textunderscore m\#2},
 \end{itemize}
-where (\#1, \#2) are placeholders for $(\ell, m)$, e.g. phase\textunderscore l2\textunderscore m-2. \\
+where (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the naming convention is phase\textunderscore l2\textunderscore m-2 and 
+amp\textunderscore l2\textunderscore m-2. \\
 \\We note that for NR data without a hybridised PN inspiral, the initial junk radiation needs to be removed before the spline interpolants are constructed. 
 Following the LAL waveform convention, the waveforms also need to be aligned such that the peak of the waveform occurs at $t_\mathrm{peak}=0$ 
 before constructing the interpolants.
@@ -155,7 +162,9 @@ before constructing the interpolants.
 \subsection{Metadata}
 \label{sec:meta}
 %%%%%%%%%%%%%%%
-Each HDF5 has to include a minimal set of metadata associated with the NR simulation stored as attributes of the HDF5 file. 
+The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}. For NINJA-2, the metadata were stored
+additional text files. Any such file may still be included in the HDF5 files, but crucially 
+each HDF5 has to include a minimal set of metadata associated with the NR simulation stored as attributes of the HDF5 file. 
 More metadata can be added as desired but the minimal requirement are the following: \\
 \begin{itemize}
 \item {[}NR-group{]}: a string to identify the NR group/code
@@ -263,7 +272,7 @@ hp, hc = lalsim.SimInspiralChooseTDWaveform(phiRef,
 where $\lambda_1$ denote the tidal deformation parameters, which vanish in the case of black holes. 
 \end{enumerate}
 Fig.~\ref{fig:waveforms} shows the two waveform polarizations $h_+$ and $h_times$ for the binary black hole hole case simulated in case 
-SXS:BBH:0019 from the public SXS catalogue \cite{} for a total mass of 50 $\mathrm{M}_\odot$. The dimensionless spins for this simulation are
+SXS:BBH:0019 from the publicly available SXS catalogue~\cite{Mroue:2013xna} for a total mass of 50 $\mathrm{M}_\odot$. The dimensionless spins for this simulation are
 $\vec{\chi}_1=(0,0,-0.5)$ and $\vec{\chi}_2=(0,0,0.499)$ and the component masses are $m_1=30.01360$ and $m_2=20.00954$.
 As extrinsic parameters, we choose the following: distance=100Mpc, inclination=0.4rad, deltaT=1.0/16384, fStart=fRef=18.88Hz. We do not alter
 the reference phase but instead pass the metadata value stored in the HDF5 file.
@@ -287,15 +296,28 @@ generated via the waveform interface in lalsimulation (left panel) and in pyCBC 
 \section*{Acknowledgments}
 We thank Kent Blackburn for carefully reading through the manuscript and providing useful comments.
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%Appendices%%%%%%%%%%%%%%%%%%%%%%%%
 \appendix
 %%%%%%%%%
 \section{Conventions and frame choices}
 \label{sec:conv}
 %%%%%%%%%%
+The new infrastructure provides a standardised interface between NR and LIGO data analysis. To guarantee
+the correct waveform handling, in particular for precessing binary simulations, certain conventions and frame
+choices must be considered. 
 
+The current setup is as follows: At the start of the waveform, i.e. the first entry in the NR time series considered in the
+HDF5 file, the instantaneous orbital, characterized by its orthonormal direction $\hat{L}$, has some (arbitrary) orientation
+in the Cartesian simulation frame $(x, y, z)$ of the NR simulation. 
+
+\begin{figure}[!h]
+\begin{center}
+\def\svgwidth{0.4\columnwidth}
+\input{SourceFrame.pdf_tex}
+\caption{Binary source frame}
+\label{fig:source}
+\end{center}
+\end{figure}
 
 %%%%%References%%%%%%%%%%%%%%%%%
 
