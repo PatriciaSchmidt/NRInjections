@@ -155,9 +155,10 @@ conventions:
 \end{itemize}
 where (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the naming convention is phase\textunderscore l2\textunderscore m-2 and 
 amp\textunderscore l2\textunderscore m-2. \\
-\\We note that for NR data without a hybridised PN inspiral, the initial junk radiation needs to be removed before the spline interpolants are constructed. 
+\\We note that for NR data without a hybridised PN inspiral, the initial \emph{junk radiation} needs to be removed \textbf{before} the spline interpolants are constructed. 
 Following the LAL waveform convention, the waveforms also need to be aligned such that the peak of the waveform occurs at $t_\mathrm{peak}=0$ 
 before constructing the interpolants.
+
 
 %%%%%%%%%%%%%%%
 \subsection{Metadata}
@@ -165,8 +166,12 @@ before constructing the interpolants.
 %%%%%%%%%%%%%%%
 The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}. For NINJA-2, the metadata were stored
 additional text files. Any such file may still be included in the HDF5 files, but crucially 
-each HDF5 has to include a minimal set of metadata associated with the NR simulation stored as attributes of the HDF5 file. 
-More metadata can be added as desired but the minimal requirement are the following: \\
+each HDF5 has to include a \emph{minimal} set of metadata associated with the NR simulation stored as attributes of the HDF5 file. Currently, metadata for time-dependent physical quantities like the spin components are given for the time corresponding to the very first data point in the mode data stored in the HDF5 file, which we henceforth will refer to as the \emph{beginning} of the waveform. 
+
+Further, the spin measurements \emph{and} the orbital phase at the beginning of the waveform have to be provided as measured in a very specific binary source frame, namely in one where the instantaneous orbital plane
+defines the xy-plane and $\hat{L}$ points along the z-axis (see Fig.~\ref{fig:source} for an illustration). Note that this may involve some transformation of spin data depending on the NR code. However, the waveform data are unchanged.
+
+More metadata can be added as desired but the minimal requirements are the following: \\
 \begin{itemize}
 \item {[}NR-group{]}: a string to identify the NR group/code
 \item {[}type{]}: a brief description of the simulation, e.g. aligned-spins, precessing etc.
@@ -182,21 +187,19 @@ To reduce potential ambiguities and to enable the usage of waveforms from matter
 \item{[}object1{]}, {[}object2{]}: a string to identify the object type, e.g. black hole, neutron star
 \item{[}mass1{]}, {[}mass2{]}: matter simulations have a mass scale, hence not only the mass ratio but also the individual masses need to be accessible
 \item{[}eccentricity{]}: eccentricity parameter of the simulation
-\item{[}NR\textunderscore frame{]}: the coordinate system used for the waveform extraction, e.g. inertial, J-aligned etc.
+%\item{[}NR\textunderscore frame{]}: the coordinate system , e.g. inertial, J-aligned etc.
 \item{[}J\textunderscore hat{]}: the direction of the total angular momentum at the beginning of the waveform
 \item{[}L\textunderscore hat{]}: the direction of the orbital angular momentum at the beginning of the waveform
 \item{[}PN\textunderscore approximant{]}: string identifier for the inspiral if hybrid data are stored
 \end{itemize}
-The spin measurements and the orbital phase at the beginning of the waveform have to be measured in a frame where the instantaneous orbital plane
-lies in the xy-plane and $\hat{L}$ points along the z-axis. \\
-\\ For complete reproducibility and transparency, we recommend to store any NR metadata files and the original NR times $t_i$ as a datasets in the HDF5 file.
+For complete reproducibility and transparency, we recommend to store any NR metadata files and the original NR times $t_i$ as a datasets in the HDF5 file.
 
 %%%%%%%%%%%%%%%
 \section{Generating NR waveforms}
 \label{sec:gen}
 %%%%%%%%%%%%%%%
 Once the HDF5 file has been provided, the NR waveforms can be generated through the standard waveform interfaces \texttt{ChooseTDWaveform()} in LAL
-and \texttt{get\textunderscore td\textunderscore waveform()} in pyCBC. The approximant names are ``NR\textunderscore hdf5'' and ``NR\textunderscore hdf5\textunderscore pycbc'' respectively. 
+and \texttt{get\textunderscore td\textunderscore waveform()} in pyCBC. The lal approximant name is ``NR\textunderscore hdf5''. To call the test verification code in pycbc, specify the approximant ``NR\textunderscore hdf5\textunderscore pycbc''. 
 As opposed to continuous approximants, the spline data are read from file and evaluated for the desired extrinsic
 parameters. The intrinsic parameters in NR simulations are fixed, currently internal checks on the mass ratio and the spin components 
 are performed to guarantee the consistency between the values passed
@@ -219,7 +222,8 @@ where the polar angle $\theta$ denotes the angle between the orbital angular mom
 angle $\phi$ is the sum of parameter value 'coa\textunderscore phase' and any reference phase passed in the waveform generator function.
 \\
 Note that all waveform modes $(\ell, m)$ contained in the HDF5 file are used
-to compute the two polarisations. \\
+to compute the two polarisations. The algorithm will incorporate any mode between $\ell =2$ and $\ell =8$ if present in the
+HDF5 file but at least the $(\ell=2, m=2)$ as to be present in the NR data file. \\
 \\
 The compressed NR data files do not store the splines themselves, but the knots, errors, the polynomial degree etc. In the pyCBC implementation,
 the splines are constructed from the HDF5 file via the python function \texttt{UnivariateSpline}, in the LAL implementation regular GSL interpolation
@@ -241,7 +245,7 @@ lalsimulation.
 \begin{lstlisting}
 from pycbc.waveform import get_td_waveform 
 
-hp, hc = get_td_waveform(approximant='NR_hdf5_pycbc', 
+hp, hc = get_td_waveform(approximant='NR_hdf5', 
                          numrel_data='/PATH/TO/HDF5',
                          mass1, mass2,
                          spin1x, spin1y, spin1z,
@@ -276,8 +280,7 @@ Fig.~\ref{fig:waveforms} shows the two waveform polarizations $h_+$ and $h_{\tim
 SXS:BBH:0019 from the publicly available SXS catalogue~\cite{Mroue:2013xna} for a total mass of 50 $\mathrm{M}_\odot$. The dimensionless spins for this simulation are
 $\vec{\chi}_1=(0,0,-0.5)$ and $\vec{\chi}_2=(0,0,0.499)$ and the component masses are $m_1=30.01360$ and $m_2=20.00954$.
 As extrinsic parameters, we choose the following: distance=100Mpc, inclination=0.4rad, deltaT=1.0/16384, fStart=fRef=18.88Hz. We do not alter
-the reference phase but instead pass the metadata value stored in the HDF5 file.
-The match between the waveforms obtained from the two numerical implementations is $\mathcal{M}=0.999999999341$.
+the reference phase but instead pass the metadata value stored in the HDF5 file. We have obtained those polarizations via the lalsimulation interface and also via the test verification code in pycbc. The match between the waveforms obtained from the two numerical implementations is $\mathcal{M}=0.999999999341$.
 \begin{figure}
 \begin{center}
 \includegraphics[width=80mm]{lalsim_TD_0019.png}
@@ -333,14 +336,15 @@ If the NR simulation the frame is defined such that $\hat{L}$ does not point alo
 
 The azimuthal angle $\phi$ denotes the instantaneous orientation of the orbital separation at the beginning of the waveform in the source frame, where $\hat{L}$ points along the z-axis. The metadata parameter ``coa\textunderscore phase'' is twice this angle.
 
-%\begin{figure}[!h]
-%\begin{center}
-%\def\svgwidth{0.4\columnwidth}
-%\input{SourceFrame.pdf_tex}
-%\caption{Binary source frame}
-%\label{fig:source}
-%\end{center}
-%\end{figure}
+\begin{figure}[!h]
+\begin{center}
+\def\svgwidth{0.4\columnwidth}
+\input{SourceFrame.pdf_tex}
+\caption{Binary source frame for spin and orbital phase measurements: The spins and orbital phase measurements at the
+beginning of the NR data set have to be provided in a frame, where $\hat{L}$ points along the z-direction.}  
+\label{fig:source}
+\end{center}
+\end{figure}
 
 %%%%%References%%%%%%%%%%%%%%%%%
 
