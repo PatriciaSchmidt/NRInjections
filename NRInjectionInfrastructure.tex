@@ -76,15 +76,16 @@ However, in the advanced detector era, we may wish to directly use NR waveforms 
 and parameter estimation to test General Relativity and to assess the systematics of analytic waveforms models within
 a uniform framework. To do so, we have recently developed a simple infrastructure to allow for the treatment of
 NR waveforms as a ``discrete'' waveform approximant provided the NR data are available in a specific format. 
-This allows the to easily integrate NR waveforms into already existing data analysis pipelines.
+This allows the easy integration of NR waveforms into already existing data analysis pipelines.
 
 Previously, hybrid waveforms of binary black holes constructed by combining a PN inspiral with an NR merger-ringdown 
 waveform have been
-used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}. Whilst this required the
-NR waveforms to be resampled at uniform times \textbf{before} inserting the mass scale, the new infrastructure uses a highly
+used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}.
+This required the
+NR waveforms to be resampled at uniform times \textbf{before} inserting the mass scale, whereas the new infrastructure uses a highly
 compressed data format to represent the NR data. Additionally, 1D spline interpolants are used to allow for the resampling
 of the waveforms \textbf{after} the mass scale has been inserted, which avoids the storage of large data sets.
-The new injection infrastructure supersedes the previous method.
+The new injection infrastructure is designed to supercede and replace the previous method.
 
 The remainder of this technical document is organised as follows: In Sec. \ref{sec:format} we give a brief introduction
 to the format of the NR waveform data. In Sec. \ref{sec:gen} we describe the code basics and how NR waveforms
@@ -104,7 +105,7 @@ Regge-Wheeler-Zerilli formalism computes the metric perturbation in the wave-zon
 spacetime. 
 
 In the TT gauge, the metric perturbation
-has two independent real polarisations, $h_+$ and $h_\times$, which are related to the complex strain by
+has two independent real polarisations, $h_+$ and $h_\times$, which can be written as a complex strain by
 \begin{equation}
 \label{ }
 h = h_+ - i h_\times \in \mathbb{C},
@@ -127,7 +128,7 @@ $\Phi_{\ell m}$,
 \label{ }
 h_{\ell m}(t) = A_{\ell m}(t)e^{i\Phi_{\ell m}(t)}.
 \end{equation}
-The amplitude of each mode is its complex norm, the phase is unwrapped argument of the complex time series $h_{\ell m}$. 
+The amplitude of each mode is its complex norm, the phase is the unwrapped argument of the complex time series $h_{\ell m}$. 
 
 %%%%%%%%%%%%%%%
 \subsection{Spline Compression}
@@ -135,9 +136,9 @@ The amplitude of each mode is its complex norm, the phase is unwrapped argument 
 %%%%%%%%%%%%%%%
 Gravitational waveforms for LIGO data analysis purposes require uniform sampling in time for a given sampling frequency $f_s$.
 NR datasets however, are commonly not uniformly sampled and if they are, the sampling interval $dt$ may not necessarily
-correspond to the one required by the sampling rate. It is therefore unavoidable to interpolate the NR data such that for any total
+correspond to the one required by the data analysis code. It is therefore unavoidable to interpolate the NR data such that for any total
 mass M and sampling rate the NR waveforms can be resampled accordingly. Whilst the NR data could simply be interpolated as
-they are, we choose the reduce the data load and therefore also the I/O time by performing 1D spline compressions on the NR data~\cite{Galley:2015aa}. This is a particular advantage for long simulations or hybrid data, but also reduces the storage needed for pure NR data. \\
+they are, we choose to reduce the data load and therefore also the I/O time by performing 1D spline compressions on the NR data~\cite{Galley:2015aa}. This is a particular advantage for long simulations or hybrid data, but also reduces the storage needed for pure NR data. \\
 
 The 1D spline compression is performed separately for each mode amplitude $A_{\ell m}$ and phase $\Phi_{\ell m}$. The compression is
 achieved by applying a greedy algorithm to the NR data, which selects the near-optimal points to construct a univariate spline interpolant
@@ -271,7 +272,7 @@ hp, hc = lalsim.SimInspiralChooseTDWaveform(phiRef,
 \end{lstlisting}
 where $\lambda_1$ denote the tidal deformation parameters, which vanish in the case of black holes. 
 \end{enumerate}
-Fig.~\ref{fig:waveforms} shows the two waveform polarizations $h_+$ and $h_times$ for the binary black hole hole case simulated in case 
+Fig.~\ref{fig:waveforms} shows the two waveform polarizations $h_+$ and $h_{\times}$ for the binary black hole hole case simulated in case 
 SXS:BBH:0019 from the publicly available SXS catalogue~\cite{Mroue:2013xna} for a total mass of 50 $\mathrm{M}_\odot$. The dimensionless spins for this simulation are
 $\vec{\chi}_1=(0,0,-0.5)$ and $\vec{\chi}_2=(0,0,0.499)$ and the component masses are $m_1=30.01360$ and $m_2=20.00954$.
 As extrinsic parameters, we choose the following: distance=100Mpc, inclination=0.4rad, deltaT=1.0/16384, fStart=fRef=18.88Hz. We do not alter
@@ -292,14 +293,18 @@ generated via the waveform interface in lalsimulation (left panel) and in pyCBC 
 \section{Discussion}
 \label{sec:discussion}
 %%%%%%%%%%
-Due to the simplicity of the new infrastructure, NR waveforms can now almost be treated the same way as 
-regular analytic approximants. They can now fully be integrated in the data analysis pipelines, making them
-available to the available tools. In particular, this includes tests against template banks, faithfulness calculations
-and the usage in parameter estimation via the generation of gwf frame files. Work is in progress to fully integrate
-the new infrastructure into the parameter estimation pipeline \texttt{lalinference}.
 
-However, in its current state there are a few caveats, which we plan to investigate with the waveform review committee
-in order to obtain the optimal solution. As opposed to the continuous waveform approximants, at the moment the metadata
+With this new infrastructure it should be much easier, and much less memory intensive, to use NR waveforms
+directly for data-analysis applications. The ``NR\_hdf5'' approximant works much the same as any other approximants
+in lalsimulation, but does have a few important differences. The user must supply the location of the HDF file
+corresponding to the waveform to be injected, this functionality was already available from NINJA, but was not
+previously used in lalsimulation. Second the user must be careful to supply mass ratio and spin values that
+are consistent with the NR files. Small changes are therefore needed to use this approximant in applications
+and we will be happy to assist with implementing such changes. PyCBC and lalinference already have test branches
+where this is available.
+
+There are also still a few caveats to the current implementation, which we plan to investigate with the waveform review committee.
+As opposed to the continuous waveform approximants, at the moment the metadata
 are only referring to the beginning of the waveform and not some reference time, which can be chosen freely. While this is 
 not a problem for aligned-spin binaries, this poses a rather big problem for precessing simulations. To fully integrate this
 desired freedom, additional information needs to be incorporated into the HDF5 files and the waveform generator
@@ -321,21 +326,21 @@ the correct waveform handling, in particular for precessing binary simulations, 
 choices must be considered. 
 
 The current setup is as follows: At the start of the waveform, i.e. the first entry in the NR time series considered in the
-HDF5 file, the instantaneous orbital, characterized by its orthonormal direction $\hat{L}$, has some (arbitrary) orientation
+HDF5 file, the instantaneous orbital plane, characterized by its orthonormal direction $\hat{L}$, has some (arbitrary) orientation
 in the Cartesian simulation frame $(x, y, z)$ of the NR simulation. The polar angle between the line-of-sight $\hat{N}$ and the instantaneous orbital angular momentum direction is denoted as $\theta$ and corresponds to the option parameter ``inclination'' in the waveform generator functions. 
 
-If the NR simulation frame is such that $\hat{L}$ does not point along the z-axis at the begin of the waveform, the additional angle between $\hat{L}$ and the z-axis needs to be taken into account when setting the value for the inclination parameter. Currently, it is up to the user to take care of this, but we aim to integrate this into the waveform generator. 
+If the NR simulation the frame is defined such that $\hat{L}$ does not point along the z-axis at the start of the waveform, the additional angle between $\hat{L}$ and the z-axis needs to be taken into account when setting the value for the inclination parameter. Currently, it is up to the user to take care of this, but we aim to integrate this into the waveform generator. 
 
 The azimuthal angle $\phi$ denotes the instantaneous orientation of the orbital separation at the beginning of the waveform in the source frame, where $\hat{L}$ points along the z-axis. The metadata parameter ``coa\textunderscore phase'' is twice this angle.
 
-\begin{figure}[!h]
-\begin{center}
-\def\svgwidth{0.4\columnwidth}
-\input{SourceFrame.pdf_tex}
-\caption{Binary source frame}
-\label{fig:source}
-\end{center}
-\end{figure}
+%\begin{figure}[!h]
+%\begin{center}
+%\def\svgwidth{0.4\columnwidth}
+%\input{SourceFrame.pdf_tex}
+%\caption{Binary source frame}
+%\label{fig:source}
+%\end{center}
+%\end{figure}
 
 %%%%%References%%%%%%%%%%%%%%%%%
 
