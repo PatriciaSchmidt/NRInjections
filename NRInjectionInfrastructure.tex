@@ -43,7 +43,7 @@ floatfix ,preprintnumbers,altaffilletter]{revtex4}
 \date{\today}
 
 \begin{flushright}
-LIGO Document DCC
+LIGO-T1500606-v1
 \end{flushright}
 
 %%%%%%%%%%%%%%%
@@ -199,13 +199,13 @@ For complete reproducibility and transparency, we recommend to store any NR meta
 \label{sec:gen}
 %%%%%%%%%%%%%%%
 Once the HDF5 file has been provided, the NR waveforms can be generated through the standard waveform interfaces \texttt{ChooseTDWaveform()} in LAL
-and \texttt{get\textunderscore td\textunderscore waveform()} in pyCBC. The lal approximant name is ``NR\textunderscore hdf5''. To call the test verification code in pycbc, specify the approximant ``NR\textunderscore hdf5\textunderscore pycbc''. 
+and \texttt{get\textunderscore td\textunderscore waveform()} in pyCBC~\cite{Canton:2014ena}. The lal approximant name is ``NR\textunderscore hdf5''. To call the test verification code in pycbc, specify the approximant ``NR\textunderscore hdf5\textunderscore pycbc''. 
 As opposed to continuous approximants, the spline data are read from file and evaluated for the desired extrinsic
 parameters. The intrinsic parameters in NR simulations are fixed, currently internal checks on the mass ratio and the spin components 
 are performed to guarantee the consistency between the values passed
 in the waveform generation call and metadata values. \\
 \\For a given starting frequency and total mass, a time array is allocated based on an estimate of the waveform length. We use the LAL function 
-\texttt{SimIMRSEOBNRv2ChirpTimeSingleSpin()} plus an extra 10\% leverage to estimate the waveform length. If the NR waveforms are not long
+\texttt{SimIMRSEOBNRv2ChirpTimeSingleSpin()} to estimate the waveform length with an additional leverage of 10\%. If the NR waveforms are not long
 enough, the generation is aborted. From the estimated length and the desired sampling rate, the discrete time series for the spline evaluation is
 determined.
 
@@ -223,11 +223,11 @@ angle $\phi$ is the sum of parameter value 'coa\textunderscore phase' and any re
 \\
 Note that all waveform modes $(\ell, m)$ contained in the HDF5 file are used
 to compute the two polarisations. The algorithm will incorporate any mode between $\ell =2$ and $\ell =8$ if present in the
-HDF5 file but at least the $(\ell=2, m=2)$ as to be present in the NR data file. \\
+HDF5 file but at least the $(\ell=2, m=2)$ has to be present in the NR data file. \\
 \\
 The compressed NR data files do not store the splines themselves, but the knots, errors, the polynomial degree etc. In the pyCBC implementation,
 the splines are constructed from the HDF5 file via the python function \texttt{UnivariateSpline}, in the LAL implementation regular GSL interpolation
-is performed. Fig.~\ref{fig:waveforms} shows an example comparison between NR waveforms obtained using the the pyCBC and the LAL waveform generators. The mismatch
+is performed. Fig.~\ref{fig:waveforms} shows an example comparison between NR waveforms obtained using the pyCBC and the LAL waveform generators. The mismatch
 between the waveforms is less than $10^{-7}$. This is consistent with the level of disagreement expected due to the different numerical interpolation
 routines. \\
 The source codes can be found in \texttt{lalsuite/lalsimulation/src/LALSimIMRNRWaveforms.c} and 
