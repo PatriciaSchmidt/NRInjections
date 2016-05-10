@@ -231,12 +231,12 @@ If a metadata text file exists, however, we recommend that it is additionally in
 \\The required metadata attributes are the following:
 \begin{itemize}
 \item {[}'NR-group'{]}: string to identify the NR group/code
-\item {[}'type'{]}: keyword description of the simulation. Allowed values are: aligned-spins, non spinning, precessing.
+\item {[}'type'{]}: keyword description of the simulation. Allowed values are: aligned-spins, non-spinning, precessing.
 \item{[}'name'{]}: alternative simulation name or internal simulation identifier
 \item{[}'object1'{]}: keyword description to identify the object type. Allowed values are: BH, NS
 \item {[}'object2'{]}: keyword description to identify the object type. Allowed values are: BH, NS
-\item{[}'mass1'{]}: mass of the heavier object
-\item{[}'mass2'{]}: mass of the lighter object
+\item{[}'mass1'{]}: mass of the heavier object; if both objects are 'BH', the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar masses $M_\odot$.
+\item{[}'mass2'{]}: mass of the lighter object; if both objects are 'BH', the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar masses $M_\odot$.
 \item{[}'eta'{]}: the symmetric mass ratio of the simulation
 \item{[}'spin1x'{]}: x-component of the dimensionless spin of the heavier object
 \item{[}'spin1y'{]}: y-component of the dimensionless spin of the heavier object 
@@ -254,8 +254,9 @@ If a metadata text file exists, however, we recommend that it is additionally in
 \end{itemize}
 To reduce potential ambiguities, we further recommend adding the following  additional metadata:
 \begin{itemize}
-\item{[}eccentricity{]}: eccentricity parameter of the simulation
-\item{[}PN\textunderscore approximant{]}: string identifier for the inspiral if hybrid data are stored
+\item{[}'eccentricity'{]}: eccentricity parameter of the simulation
+\item {[}'mean\textunderscore anomaly'{]}: mean anomaly at the beginning of the waveform (cf. Eq.~\ref{eq:anomaly}).
+\item{[}'PN\textunderscore approximant'{]}: string identifier for the inspiral if hybrid data are stored
 \end{itemize}
 
 %%%%%%%%%%%%%%%
@@ -682,6 +683,7 @@ numbers:
 \item Eccentricity $e$.
 \item Mean anomaly $\meanAnomaly$.  The mean anomaly is defined in terms of the current time $t$, the time of last periapsis passage $T_{\rm previous}$, and the time of next periapsis passage $T_{\rm next}$: 
 \begin{equation}
+\label{eq:anomaly}
 \meanAnomaly=2\pi\frac{t-T_{\rm previous}}{T_{\rm next}-T_{\rm previous}}.
 \end{equation}
 \end{itemize}
