@@ -113,7 +113,7 @@ This document describes the new standardised NR injection infrastructure in the 
 which henceforth allows for the usage of Numerical Relativity (NR) waveforms as a discrete waveform approximant
 in LAL. With this new interface, NR waveforms provided in the appropriate format can directly be
 used as mock GW signals (``injections'') for LIGO data analyses, which include parameter estimation, searches, hardware
-injections etc. The interface handles higher-order modes making them directly accessible to LIGO data analyses for
+injections etc. The interface handles higher-order modes making them directly accessible to LIGO analyses for
 the very first time. The NR injection infrastructure also takes care of waveform frame conventions and transforms the NR
 data into the correct LAL frame. 
 \end{abstract}
@@ -138,7 +138,7 @@ Regarding the usage of NR waveforms for LIGO data analysis, so far, NR merger wa
 In the Advanced detector era, however, we want to be able to directly use NR waveforms in gravitational-wave searches
 and parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within
 a uniform framework. 
-This is know possible with the recently implemented  simple infrastructure, which allows for the treatment of
+This is now possible with the recently implemented  simple infrastructure, which allows for the treatment of
 NR waveforms as a ``discrete'' waveform approximant provided the NR data are available in a \emph{specific format}. 
 
 In previous efforts, BBH hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown 
@@ -147,7 +147,7 @@ waveform, have been used in LIGO data analysis and parameter estimation in the N
   
 The new infrastructure handles this differently, in the following way: Firstly, since it naturally handles higher-order modes, it uses a highly compressed data format to represent the NR data to reduce the storage requirements and reduce I/O time. 
 Secondly, the compressed NR data are interpolated using 1D spline interpolation, and the resulting interpolants are evaluated \emph{after} the mass scale has been inserted. This avoids high-memory operations and also bypasses the need to store unnecessarily large data files.
-The new injection infrastructure fully implemented in LAL and supersedes any previously used NR modules.
+The new injection infrastructure fully implemented in LAL and is intended to supersede any previously used NR modules.
 
 The remainder of this technical document is organised as follows: In Sec. \ref{sec:format} we provide a brief summary
 of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we describe the basics of the waveform generation code and give explicit examples of how the NR waveforms are evaluated in lalsimulation/pycbc. Sec. \ref{sec:coordinates} details the frame transformations between the NR simulation frame and the LAL wave frame. We highlight caveats and desired future improvements in Sec.~\ref{sec:discussion}.
@@ -162,7 +162,7 @@ is the metric perturbation $h^{TT}_{ij}$ as computed in the transverse-traceless
 
 There are different way of computing the metric perturbation from a numerical evolution. The most common methods include
 the use of the complex Weyl scalar $\Psi_4$, which is related to the metric perturbation via two time derivatives, or the
-Regge-Wheeler-Zerilli formalism computes the metric perturbation in the wave-zone as a perturbation of the Schwarzschild
+Regge-Wheeler-Zerilli formalism, which computes the metric perturbation in the wave-zone as a perturbation of the Schwarzschild
 spacetime. 
 
 In the TT gauge, the metric perturbation
@@ -359,7 +359,7 @@ generated via the waveform interface in lalsimulation (left panel) and in pyCBC 
 \subsubsection{Executive summary: changes of conventions}
 
 In recent discussions, it became apparent that current LAL conventions
-to specify precessing binary compact objects are deficient: (i) The
+to specify precessing binary compact objects are not ideal: (i) The
 phase-angle {\tt phiRef} couples specification of the line-of-sight to
 Earth with specification of spin components {\tt S1x, S1y, S1z, S2x,
   S2y, S2z}.  To compute waveforms for the \emph{identical} CBC system
@@ -399,26 +399,26 @@ coordinates are employed during the numerical evolution, generally
 resulting in a third coordinate system.
 
 This note defines coordinate frames for use in LAL.  Specifically, we
-achive:
+achieve:
 \begin{enumerate}
   \item Identification of a set of intrinsic parameters that fully
-    describe the dyamics of a binary on an eccentric orbit,
+    describe the dynamics of a binary on an eccentric orbit,
     defined solely in terms of the source-frame (i.e. independent of
     the wave-frame).
   \item Identification of three angles that describe the
     transformation between source- and wave-frame, which are
     independent of the intrinsic parameters.
   \item Identification of parameters describing the orbital phase and
-    periapse location, which have a convenient circular-orbit limit:
+    periapsis location, which have a convenient circular-orbit limit:
     As the eccentricity tends to zero, one of the two phase-parameters
     reduces to the standard orbital phase for circular orbits, whereas
     the other becomes irrelevant.
-  \item Identites that relate the basis-vectors in the source-frame to the
+  \item Identities that relate the basis-vectors in the source-frame to the
     wave-frame (and vice versa).  These identities are written in
     vectorial form and are valid in any coordinate system.
 \end{enumerate}
 
-The orthogonal decomposition into intrisic and extrinsic parameters
+The orthogonal decomposition into intrinsic and extrinsic parameters
 (points 1 and 2) allows to change the direction at which a binary is
 viewed (i.e. the wave-frame), without having to adjust the parameters
 that determine the intrinsic dynamics.  Point 3 prepares the ground
@@ -475,10 +475,10 @@ from one frame to another.
 \label{sec:Frames}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The frames defined here differ somewhat from the preceeding LAL
+The frames defined here differ somewhat from the preceding LAL
 conventions, as spelled out in
 \url{http://software.ligo.org/docs/lalsuite/lalsimulation/group__lalsimulation__inspiral.html}.
-The differences are needed to achive the separation between intrinsic
+The differences are needed to achieve the separation between intrinsic
 and extrinsic parameters.  In the old conventions, the orbital phase
 $\phi$ was also used as part of the rotation parameters that define
 the rotation between source- and wave-frame.  Therefore, to ``look''
@@ -589,7 +589,7 @@ to relate these two time-coordinates to each other, e.g. to make a
 statement about the dynamical state of the binary at the time ``when a
 certain GW-frequency is reached''.  Any relation between $\tGW$ and
 $t$ is ambiguous.  Often NR simulations employ an approximation of
-``retarted time'', i.e.
+``retarded time'', i.e.
 \begin{equation}
   \label{eq:tretarted}
   \tGW = t\big|_{\rm retarted}.
@@ -600,12 +600,12 @@ infinity, so there are no outgoing null-rays that connect the horizons
 to the wave-zone.  Second, when integrating null-rays ``slightly
 outside'' the horizons, the time-delay to infinity will depend on
 precisely where the integration was started, as well as on the initial
-direction of the null-ray.  Therefore, any relation betwee $\tGW$ and
+direction of the null-ray.  Therefore, any relation between $\tGW$ and
 $t$ should be viewed as approximate.  One should further assume that
 different NR groups may use different definitions of $\tGW$ in the
 data they compute.  For instance, {\tt SpEC} reports GW-waveforms
 extracted at \emph{finite-radius} in terms of the NR coordinate,
-$\tGW=t$, whereas extrapolated waveforms are reported using a retarted
+$\tGW=t$, whereas extrapolated waveforms are reported using a retarded
 time-coordinate with a correction of the rate of flow of time, see
 Equations (7), (14a) and (14b) of Boyle \& Mroue~\cite{Boyle:2009vi}.
 
@@ -733,7 +733,7 @@ The gravitational wave modes are defined as
 \end{subequations}
 where the superscript 'W' indicates the LAL wave-frame.  The angle
 $\Omega$ merely rotates the $\ExW$ and $\EyW$.  By definition
-Eq.~(\ref{eq:hW}), this merely rotates the polatization of the GW
+Eq.~(\ref{eq:hW}), this merely rotates the polarization of the GW
 modes, and so $\Omega$ is fully degenerate with the GW polarization.  
 
 
@@ -750,11 +750,11 @@ modes, and so $\Omega$ is fully degenerate with the GW polarization.
 %% the basis of the GW polarizations.
 
 Note that the phase-angle $\phiRef$ is specified without regard to the
-location of periapse of the binary (this differs from the previous LAL
+location of periapsis of the binary (this differs from the previous LAL
 convention).  This new definition decouples the specification of
-periapse location and the specification of orbital phase, and avoids
-the ambigutity that would arise in the zero-eccentricity limit of
-definitions involving periapse.  Indeed, for fixed $\phiRef$ and fixed
+periapsis location and the specification of orbital phase, and avoids
+the ambiguity that would arise in the zero-eccentricity limit of
+definitions involving periapsis. Indeed, for fixed $\phiRef$ and fixed
 $\meanAnomaly$, as eccentricity approaches zero, the waveforms will
 approach the identical circular form, independent of the value of
 $\meanAnomaly$.
@@ -792,7 +792,7 @@ The inverse rotation is
   \EzS & = \EzS.
 \end{align}
 \end{subequations}
-The vectors $\hat p, \hat q$ form an ortho-normal basis of the
+The vectors $\hat p, \hat q$ form an orthonormal basis of the
 $\ExS$-$\EyS$ plane, such that $\hat p$ points in the direction of
 ascending node.
 
@@ -895,7 +895,7 @@ Eqs.~(\ref{eq:Source-To-Wave}) simplify to
   \label{eq:Source-To-Wave-Omega0}
   \begin{align}
     \ExW=& -\cos\iota\sin\phiRef\,\ExS-\cos\iota\cos\phiRef\,\EyS\,+\sin\iota\,\EzS,\\
-    \EyW=&\qquad\quad \cos\phiRef\,\ExS\qquad\,-\sin\phiRef\,\EyS,\\
+    \EyW=&\quad\quad\;\;\; \cos\phiRef\,\ExS\qquad\,-\sin\phiRef\,\EyS,\\
 \label{eq:Z_from_z-Omega0}
 \EzW=&\;\;\;\;\,\sin\iota\sin\phiRef\,\ExS+\sin\iota\cos\phiRef\,\EyS\, + \cos\iota\,\EzS.
   \end{align}
@@ -908,7 +908,7 @@ The inverse transformation (\ref{eq:Wave-To-Source}) simplifies to
     + \sin\iota\sin\phiRef\,\EzW,\\
     \EyS=& -\cos\iota\cos\phiRef\,\ExW-\sin\phiRef\,\EyW
     + \sin\iota\cos\phiRef\,\EzW,\\
-    \EzS=&\qquad\quad\;\,\sin\iota\,\ExW \qquad\qquad\qquad\;\;\,+\cos\iota\,\EzW.
+    \EzS=&\qquad\quad\;\,\sin\iota\,\ExW \qquad\qquad\qquad\;+\cos\iota\,\EzW.
   \end{align}
   \end{subequations}
 
@@ -1009,7 +1009,7 @@ polarization pick up precisely an overall minus-sign.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Computing GW polatizations in the LAL wave-frame}
+\subsection{Computing GW polarizations in the LAL wave-frame}
 \label{sec:NR-LAL-Trafo}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
