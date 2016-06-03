@@ -204,6 +204,11 @@ H_{\ell m}(t) = A_{\ell m}(t)e^{i\Phi_{\ell m}(t)}.
 \end{equation}
 The amplitude of each mode is its complex norm, the phase is the unwrapped argument of the complex time series $h_{\ell m}$. For a binary that is orbiting counter-clockwise in the xy-plane (i.e. orbital angular frequency vector is \emph{parallel} to the z-axis), $\Phi_{2,2}(t)$ is a monotonically {\bf decreasing} function.
 
+\harald{Following the LAL waveform convention, the time-coordinate $t$
+  in the waveform modes should be choosen such that the peak of the
+  waveform occurs at $t_\mathrm{peak}=0$.  We recommend to define ``peak'' by 
+the maximum of $\sum_{\ell,m}A_{\ell,m}^2$.}   \red{[NOTE:  The definition of peak is newly added by HP]}
+
 %%%%%%%%%%%%%%%
 \subsection{Spline Compression}
 \label{sec:spline}
@@ -211,21 +216,27 @@ The amplitude of each mode is its complex norm, the phase is the unwrapped argum
 Gravitational waveforms for LIGO data analysis purposes require uniform sampling in time for a given sampling frequency $f_s$.
 NR datasets however, are commonly not uniformly sampled and if they are, the sampling interval $dt$ may not necessarily
 correspond to the one required by data analysis tools. 
-It is therefore unavoidable to interpolate the NR data such that for any total
-mass M and sampling rate the NR waveforms can be resampled accordingly. Whilst the NR data could simply be interpolated as
-they are, we choose to reduce the data by performing 1D spline compression on the NR data~\cite{Galley:2016aa}. This is a particular advantage for long simulations or hybrid PN-NR data, but also significantly reduces the storage and I/O for pure NR data. It is mandatory that the NR data files are provided in the correct compressed file format, which is as follows: \\
-\\The 1D spline compression is performed separately for each mode amplitude $A_{\ell m}$ and phase $\Phi_{\ell m}$. The compression is
-achieved by applying a greedy algorithm to the NR data, which selects the near-optimal points to construct a univariate spline interpolant
+It is therefore unavoidable to interpolate the NR data  \sout{such that for any total
+mass M and sampling rate the NR waveforms can be resampled accordingly} \harald{to the desired sampling rate}. Whilst the NR data could simply be interpolated as
+they are, we choose to reduce the data by performing 1D spline compression on the NR data~\cite{Galley:2016aa}. This is a particular advantage for long simulations or hybrid PN-NR data, but also significantly reduces the storage and I/O for pure NR data. 
+
+\sout{It is mandatory that the NR data files are provided in the correct compressed file format, which is as follows: \\}
+
+The 1D spline compression is performed separately for each {\bf mode amplitude} $A_{\ell m}$ and {\bf phase} $\Phi_{\ell m}$, which are
+already time-shifted such that $t=0$ corresponds to the peak of the waveform.  Compression uses a greedy algorithm~\cite{Galley:2016aa}, which selects the near-optimal points to construct a univariate spline interpolant
 with a specified global accuracy. By default, the interpolants are constructed using fifth degree polynomials and a tolerance of $10^{-6}$,
 i.e. if the spline is evaluated at the discrete times $t_i$ of the NR data, the original NR values are recovered with an error smaller than the
-specified tolerance. For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016aa}. The spline compression is performed using the publicly available python package ``romSpline'' by Chad R. Galley~\cite{romspline}. \\
-\\The spline interpolants for each amplitude and phase are obtained via \texttt{romSpline.ReducedOrderSpline()} as follows:
+specified tolerance. For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016aa}. The spline compression is performed using the publicly available python package ``romSpline'' by Chad R. Galley~\cite{romspline}. 
+
+The spline interpolants for each amplitude and phase are obtained via \texttt{romSpline.ReducedOrderSpline()} as follows:
 \begin{lstlisting}
 import romSpline
 spline = romSpline.ReducedOrderSpline(time_data, amplitude/phase_data, verbose=False)
 spline.write('filename.h5')
 \end{lstlisting}
-Note: a newer version of romSpline now also allows to pass a group descriptor, i.e. writing to file as intermediate step may be avoided.
+\red{[HP added text and reworded.  Please check for correctness]}
+\harald{The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series. 
+Note: a newer version of romSpline now also allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file, without the need for an intermediate step.}
 
 Once the spline interpolants have been obtained, they have to be stored as individual groups in a \emph{single HDF5 file} with the following mandatory group naming conventions: 
 \begin{itemize}
@@ -234,16 +245,25 @@ Once the spline interpolants have been obtained, they have to be stored as indiv
 \end{itemize}
 where (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the naming convention is phase\textunderscore l2\textunderscore m-2 and 
 amp\textunderscore l2\textunderscore m-2. \\
-\\Pure NR data without a hybridised PN inspiral need to have the initial \emph{junk radiation} removed before the spline interpolants are constructed but no tapering should be applied at the beginning or end of the waveform data. Following the LAL waveform convention, the waveforms also need to be aligned such that the peak of the waveform occurs at $t_\mathrm{peak}=0$ before constructing the interpolants. In addition to the amplitude and phase groups, we highly recommend to also include the NR times as a group in the HDF5 file. 
+\\Pure NR data without a hybridised PN inspiral need to have the initial \emph{junk radiation} removed before the spline interpolants are constructed but no tapering should be applied at the beginning or end of the waveform data.  
+
+
+\red{[HP: Define precisely what is meant by ``NR times''.  It sounds like I should be adding a 1-D array that just has the original time-steps of my NR data.  I cannot imagine how this would be useful, as it doesn't transmit the information of what times are used in the greedy interpolation.]}
+In addition to the amplitude and phase groups, we highly recommend to also include the NR times as a group in the HDF5 file. 
 
 %%%%%%%%%%%%%%%
 \subsection{Metadata}
 \label{sec:meta}
 %%%%%%%%%%%%%%%
-The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}, and whilst then metadata were stored an additional text file, it is now mandatory that each HDF5 contains a \emph{minimal} set of metadata stored as \emph{attributes} of the HDF5 file. 
-If a metadata text file exists, however, we recommend that it is additionally included in the HDF5 file.\\
-\\In the current implementation, the required metadata which are time-dependent (see list below) have to contain the values associated with the first entry in the stored time series. For pure NR data, since the junk radiation has to be removed, these are \emph{not} the initial data of the simulation. We refer to this very first data point stored in the HDF5 file as the \emph{beginning} of the waveform data. Source frame dependent metadata should be given in the NR simulation frame. \\
-\\The required metadata attributes are the following:
+The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}.  The metadata are described in the following list, and are 
+\sout{
+and whilst then metadata were stored an additional text file, it is now mandatory that each HDF5 contains a \emph{minimal} set of metadata
+} stored as \emph{attributes} of the HDF5 file.
+Often, more extensive metadata is available for a NR simulation.  We recommend that such additional metadata is included as a free-format text data-set the HDF5 file.
+
+In the current implementation, those required metadata which are time-dependent (see list below) have to contain the values associated with the first entry in the stored time series. For pure NR data, since the junk radiation has to be removed, these are \emph{not} the initial data of the simulation. We refer to this very first data point stored in the HDF5 file as the \emph{beginning} of the waveform data. Source frame dependent metadata should be given in the NR simulation frame. \\
+
+The required metadata attributes are the following:
 \begin{itemize}
 \item {[}'NR-group'{]}: string to identify the NR group/code
 \item {[}'type'{]}: keyword description of the simulation. Allowed values are: aligned-spins, non-spinning, precessing.
@@ -273,6 +293,18 @@ To reduce potential ambiguities, we further recommend adding the following  addi
 \item {[}'mean\textunderscore anomaly'{]}: mean anomaly at the beginning of the waveform (cf. Eq.~\ref{eq:anomaly}).
 \item{[}'PN\textunderscore approximant'{]}: string identifier for the inspiral if hybrid data are stored
 \end{itemize}
+
+\harald{As indicated, vectors are represented by Cartesian components.
+  These components must be specified in a coordinate system consistent
+  with the one used in the decomposition in spherical harmonics
+  (e.g. the polar axis of the spherical harmonics must point along the
+  +z axis).  No requirements are placed on the orientation of the
+  binary.  For instance, {\tt nhat} and {\tt LNhat} need not point
+  along specific coordinate axes.  The rotation of the GW modes is
+  taken care of by the NR injection infrastructure, following
+  conventions described in Sec.~\ref{sec:coordinates}.}
+
+
 
 %%%%%%%%%%%%%%%
 \section{NR waveform evaluation in LAL}
