@@ -362,17 +362,16 @@ hp, hc = get_td_waveform(approximant='NR_hdf5',
                          coa_phase)
 \end{alltt}
 \end{enumerate}
-Fig.~\ref{fig:waveforms} shows the two waveform polarizations $h_+$ and $h_{\times}$ for the binary black hole hole case simulated in case 
-SXS:BBH:0019 from the publicly available SXS catalogue~\cite{Mroue:2013xna} for a total mass of 50 $\mathrm{M}_\odot$. The dimensionless spins for this simulation are
-$\vec{\chi}_1=(0,0,-0.5)$ and $\vec{\chi}_2=(0,0,0.499)$ and the component masses are $m_1=30.01360$ and $m_2=20.00954$.
-As extrinsic parameters, we choose the following: distance=100Mpc, inclination=0.4rad, deltaT=1.0/16384, fStart=fRef=18.88Hz. We do not alter
-the reference phase but instead pass the metadata value stored in the HDF5 file. We have obtained those polarizations via the lalsimulation interface and also via the test verification code in pycbc. The match between the waveforms obtained from the two numerical implementations is $\mathcal{M}=0.999999999341$.
+Fig.~\ref{fig:waveforms} shows the two waveform polarizations $h_+$ and $h_{\times}$ for the precessing binary black hole hole simulated in case 
+SXS:BBH:0006 from the publicly available SXS catalogue~\cite{Mroue:2013xna} for a total mass of 50 $\mathrm{M}_\odot$ and an inclination of $\pi/3$. The dimensionless spins for this simulation in the LAL frame are 
+$\vec{\chi}_1=(-0.05, -0.27, -0.16)$ and $\vec{\chi}_2=(-0.02, -0.11, -0.10)$ and the component masses are $m_1=28.68$ and $m_2=21.32$. The waveform is generated from its beginning, corresponding to the starting frequency of fStart=18.76Hz.
+Further parameters are: distance=100Mpc, deltaT=1.0/16384, phiRef=0 and fRef=fStart.
 \begin{figure}
 \begin{center}
-\includegraphics[width=80mm]{lalsim_TD_0019.png}
-\includegraphics[width=80mm]{pycbc_TD_0019.png}
-\caption{\red{Those need to be replaced with updated version.} The waveform polarizations $h_+$(solid, red) and $h_\times$(dashed, blue) of the publicly available SXS waveform SXS:BBH:0019 
-generated via the waveform interface in lalsimulation (left panel) and in pyCBC (right panel).}
+\includegraphics[width=80mm]{lalsim_SXS6.pdf}
+\includegraphics[width=80mm]{pycbc_SXS6.pdf}
+\caption{The waveform polarizations $h_+$(red) and $h_\times$(blue) of the publicly available SXS waveform SXS:BBH:0006
+generated via the waveform interface in lalsimulation (left panel) and in pyCBC (right panel). }
 \label{fig:waveforms}
 \end{center}
 \end{figure}
