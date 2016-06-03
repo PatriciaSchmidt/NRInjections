@@ -1,5 +1,5 @@
 \documentclass[aps,prd,amssymb,amsmath,amsfonts,superscriptaddress,
-floatfix ,preprintnumbers,altaffilletter,11pt]{revtex4}
+floatfix,preprintnumbers,altaffilletter,11pt]{revtex4}
 
 \usepackage{epsfig}
 \usepackage{graphics}
@@ -20,6 +20,7 @@ floatfix ,preprintnumbers,altaffilletter,11pt]{revtex4}
 \usepackage{listings}
 \usepackage{url}
 \usepackage[normalem]{ulem} 
+\usepackage{alltt}
 
 %%%%%Some new commands%%%%%%%%%%%%%%%%%
 % Macros for text changes
@@ -136,36 +137,34 @@ analytic post-Newtonian expansions of the Einstein field equations~\cite{lrr-201
 To obtain the waveforms for the final stages, the full non-linear solutions
 of the field equations are required, which are provided by Numerical Relativity (NR) (see for example~\cite{Centrella:2010mx} for an overview).
 
-\harald{The most important impact of numerical relativity on LIGO data analysis
-is the construction of waveform models for the complete inspiral-merger-ringdown (see~\cite{Ohme:2011rm} for a review).  Such waveform models~\cite{Khan:2015jqa, Taracchini:2013rva} underpin LIGO's  GW searches, parameter estimation and tests of General relativity~(\cite{Abbott:2016blz} and references therein).  
+\harald{One of the most important impact of numerical relativity on LIGO data analysis
+is the construction of waveform models for the complete inspiral-merger-ringdown (see~\cite{Ohme:2011rm} for a review). Such waveform models~\cite{Khan:2015jqa, Taracchini:2013rva} underpin LIGO's  GW searches, parameter estimation and tests of General relativity~(\cite{Abbott:2016blz} and references therein).  
 In the analysis of GW150914, numerical simulations were also used to determine the remnant black hole's mass and spin, and to investigate systematic biases due to waveform modeling errors.
 %Numerical simulations were also used to validate waveform models (e.g.~\cite{Kumar:2016dhh} and to test data-analysis algorithms~\cite{Aylott:2009ya,Aasi:2014tra}
 }
 \sout{Regarding the usage of NR waveforms for LIGO data analysis, so far, NR merger waveforms have predominantly been used to calibrate the merger-ringdown section of analytic waveform models which describe the complete inspiral-merger-ringdown (IMR) signal~cite{Khan:2015jqa, Taracchini:2013rva}, to test such models against independent NR waveforms not used in the construction and to determine the physical properties of the remnant black hole~\cite{Healy:2014yta}.}
 
 
-In the Advanced detector era, \harald{it is very advantageous} \sout{however, we want} to be able to directly use NR waveforms in gravitational-wave searches
+In the Advanced detector era, it is very advantageous to be able to directly use NR waveforms in gravitational-wave searches
 and parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within
-a uniform framework.   \harald{Such use of NR waveforms should be easy and convenient.}
-This is now possible with the \harald{\emph{Numerical Relativity Injection Infrastructure} described in this document.   Once the NR data is provided in a specific format (as described below), this infrastructure} allows for the treatment of
-NR waveforms as a ``discrete'' waveform approximant\harald{, which can seamlessly called from within the LIGO Algorithm Library (LAL)}.
+a uniform framework. Such use of NR waveforms should be easy and convenient.
+This is now possible with the new \emph{Numerical Relativity Injection Infrastructure} described in this document. Once the NR data is provided in a specific format (as described below), this infrastructure allows for the treatment of
+NR waveforms as a ``discrete'' waveform approximant, which can seamlessly called from within the LIGO Algorithm Library (LAL).
 
 In previous efforts, BBH hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown 
-waveform, were used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}.  \sout{These hybrids only contained the dominant harmonics, the $(\ell, |m|) =(2,2)$ modes,} \harald{
-The data format employed~\cite{Brown:2007jx} required the NR waveforms to be resampled to a uniform time-spacing.  In the NINJA framework, the resampling was performed 
- \emph{before} inserting the total mass scale.  For the waveforms to be
-useable at high total mass, the time-spacing in the NR data had to be very small, resulting in very large storage requirements, even if only the dominant haromonics $(\ell,m)=(2,\pm 2)$ were supplied.}  \sout{...
- resulting in very memory-intensive storage requirements, since the finest $\Delta t$ for a given $f_s$ is determined by the highest total mass one wants to be able to resolve.}
+waveform, were used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}.  
+The previously employed data format~\cite{Brown:2007jx} required the NR waveforms to be resampled to a uniform time-spacing.  In the NINJA framework, the resampling was performed \emph{before} inserting the total mass scale.  For the waveforms to be
+useable at high total mass, the time-spacing in the NR data had to be very small, resulting in very large storage requirements, even if only the dominant haromonics $(\ell,m)=(2,\pm 2)$ were supplied.
 
-\harald{The new infrastructure described here improves on the earlier approaches
-in several significant ways. First, data is stored in a highly efficient compressed format;  even including a large number of sub-dominant modes (as is now encouraged), storage requirements are lower than just for the dominant modes in the preceeding storage format.  
+The new infrastructure described here improves on the earlier approaches
+in several significant ways. First, data is stored in a highly efficient compressed format;  even including a large number of sub-dominant modes (as is now encouraged), storage requirements are lower than just for the dominant modes in the preceding storage format.  
 Second, the compressed NR data are interpolated with 1D spline interpolation \emph{after} the mass scale is inserted. This avoids high-memory operations and further reduces storage requirements and I/O times.  Third, the new infrastructure handles projection of the NR data onto
 arbitrary source-location and detector orientation using the same conventions
-as LAL. }
+n LAL as other waveform families.
 The new injection infrastructure fully implemented in LAL and is intended to supersede any previously used NR modules.
 
 The remainder of this technical document is organised as follows: In Sec. \ref{sec:format} we provide a brief summary
-of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we describe the basics of the waveform generation code and give explicit examples of how the NR waveforms are evaluated in lalsimulation/pycbc. Sec. \ref{sec:coordinates} details the frame transformations between the NR simulation frame and the LAL wave frame. We highlight caveats and desired future improvements in Sec.~\ref{sec:discussion}.
+of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we describe the basics of the waveform generation code and give explicit examples of how the NR waveforms are evaluated in lalsimulation. Sec. \ref{sec:coordinates} details the frame transformations between the NR simulation frame and the LAL wave frame. We highlight caveats and desired future improvements in Sec.~\ref{sec:discussion}.
 
 %%%%%%%%%%%%%%%
 \section{Waveform format}
@@ -204,11 +203,11 @@ H_{\ell m}(t) = A_{\ell m}(t)e^{i\Phi_{\ell m}(t)}.
 \end{equation}
 The amplitude of each mode is its complex norm, the phase is the unwrapped argument of the complex time series $h_{\ell m}$. For a binary that is orbiting counter-clockwise in the xy-plane (i.e. orbital angular frequency vector is \emph{parallel} to the z-axis), $\Phi_{2,2}(t)$ is a monotonically {\bf decreasing} function.
 
-\harald{Following the LAL waveform convention, the time-coordinate $t$
-  in the waveform modes should be choosen such that the peak of the
-  waveform occurs at $t_\mathrm{peak}=0$.  We recommend to define ``peak'' by 
-the maximum of $\sum_{\ell,m}A_{\ell,m}^2$.}   \red{[NOTE:  The definition of peak is newly added by HP]}
-
+Following the LAL waveform convention, the time-coordinate $t$ in the waveform modes should be chosen such that the peak of the waveform occurs at $t_\mathrm{peak}=0$. We recommend to define ``peak'' of the waveform by 
+\begin{equation}
+\label{eq:peak}
+h_\mathrm{peak} = \max \left( \sum_{\ell, m} A_{\ell, m}^2 \right).
+\end{equation}
 %%%%%%%%%%%%%%%
 \subsection{Spline Compression}
 \label{sec:spline}
@@ -216,27 +215,26 @@ the maximum of $\sum_{\ell,m}A_{\ell,m}^2$.}   \red{[NOTE:  The definition of pe
 Gravitational waveforms for LIGO data analysis purposes require uniform sampling in time for a given sampling frequency $f_s$.
 NR datasets however, are commonly not uniformly sampled and if they are, the sampling interval $dt$ may not necessarily
 correspond to the one required by data analysis tools. 
-It is therefore unavoidable to interpolate the NR data  \sout{such that for any total
-mass M and sampling rate the NR waveforms can be resampled accordingly} \harald{to the desired sampling rate}. Whilst the NR data could simply be interpolated as
+It is therefore unavoidable to interpolate the NR data to the desired sampling rate. Whilst the NR data could simply be interpolated as
 they are, we choose to reduce the data by performing 1D spline compression on the NR data~\cite{Galley:2016aa}. This is a particular advantage for long simulations or hybrid PN-NR data, but also significantly reduces the storage and I/O for pure NR data. 
 
 \sout{It is mandatory that the NR data files are provided in the correct compressed file format, which is as follows: \\}
 
 The 1D spline compression is performed separately for each {\bf mode amplitude} $A_{\ell m}$ and {\bf phase} $\Phi_{\ell m}$, which are
-already time-shifted such that $t=0$ corresponds to the peak of the waveform.  Compression uses a greedy algorithm~\cite{Galley:2016aa}, which selects the near-optimal points to construct a univariate spline interpolant
-with a specified global accuracy. By default, the interpolants are constructed using fifth degree polynomials and a tolerance of $10^{-6}$,
-i.e. if the spline is evaluated at the discrete times $t_i$ of the NR data, the original NR values are recovered with an error smaller than the
-specified tolerance. For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016aa}. The spline compression is performed using the publicly available python package ``romSpline'' by Chad R. Galley~\cite{romspline}. 
+already time-shifted such that $t=0$ corresponds to the peak of the waveform. The routine employed to compress and interpolate the data is the \emph{reduced-order spline interpolation} presented in~\cite{Galley:2016aa}. It uses a greedy algorithm, which selects the near-optimal points to construct a univariate spline interpolant with a specified global accuracy.
+By default, the interpolants are constructed using fifth degree polynomials and a tolerance of $10^{-6}$,
+i.e., if the spline is evaluated at the discrete times $t_i$ of the NR data, which were not selected by the greedy algorithm, the original NR values are recovered with an error equal to or smaller than the specified tolerance. In addition, a median error can be associated with any predicted value, i.e., a value not contained in the original NR data. 
+For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016aa}. The spline compression is conveniently performed using the publicly available Python package \texttt{romSpline} by Chad R. Galley~\cite{romspline}. 
 
-The spline interpolants for each amplitude and phase are obtained via \texttt{romSpline.ReducedOrderSpline()} as follows:
-\begin{lstlisting}
-import romSpline
-spline = romSpline.ReducedOrderSpline(time_data, amplitude/phase_data, verbose=False)
+The spline interpolants for each amplitude and phase are obtained via \verb"romSpline.ReducedOrderSpline()" as follows: 
+\begin{alltt}
+import romSpline 
+spline = romSpline.ReducedOrderSpline(\(t\), \(A\sb{\ell,m}(t)/\phi\sb{\ell,m}(t)\), verbose=False)
 spline.write('filename.h5')
-\end{lstlisting}
-\red{[HP added text and reworded.  Please check for correctness]}
-\harald{The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series. 
-Note: a newer version of romSpline now also allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file, without the need for an intermediate step.}
+\end{alltt}
+
+The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series. 
+Note: a newer version of romSpline now also allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file, without the need for an intermediate step.
 
 Once the spline interpolants have been obtained, they have to be stored as individual groups in a \emph{single HDF5 file} with the following mandatory group naming conventions: 
 \begin{itemize}
@@ -246,20 +244,14 @@ Once the spline interpolants have been obtained, they have to be stored as indiv
 where (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the naming convention is phase\textunderscore l2\textunderscore m-2 and 
 amp\textunderscore l2\textunderscore m-2. \\
 \\Pure NR data without a hybridised PN inspiral need to have the initial \emph{junk radiation} removed before the spline interpolants are constructed but no tapering should be applied at the beginning or end of the waveform data.  
-
-
-\red{[HP: Define precisely what is meant by ``NR times''.  It sounds like I should be adding a 1-D array that just has the original time-steps of my NR data.  I cannot imagine how this would be useful, as it doesn't transmit the information of what times are used in the greedy interpolation.]}
-In addition to the amplitude and phase groups, we highly recommend to also include the NR times as a group in the HDF5 file. 
+In addition to the amplitude and phase groups, we recommend to also include the NR times, i.e., the 1D data array containing the original time-steps of the NR data, as a group in the HDF5 file. 
 
 %%%%%%%%%%%%%%%
 \subsection{Metadata}
 \label{sec:meta}
 %%%%%%%%%%%%%%%
-The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}.  The metadata are described in the following list, and are 
-\sout{
-and whilst then metadata were stored an additional text file, it is now mandatory that each HDF5 contains a \emph{minimal} set of metadata
-} stored as \emph{attributes} of the HDF5 file.
-Often, more extensive metadata is available for a NR simulation.  We recommend that such additional metadata is included as a free-format text data-set the HDF5 file.
+The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}. The metadata are described in the following list, and are 
+stored as \emph{attributes} of the HDF5 file. Often, more extensive metadata is available for a NR simulation. We recommend that such additional metadata is included as a free-format text data-set the HDF5 file.
 
 In the current implementation, those required metadata which are time-dependent (see list below) have to contain the values associated with the first entry in the stored time series. For pure NR data, since the junk radiation has to be removed, these are \emph{not} the initial data of the simulation. We refer to this very first data point stored in the HDF5 file as the \emph{beginning} of the waveform data. Source frame dependent metadata should be given in the NR simulation frame. \\
 
@@ -294,18 +286,18 @@ To reduce potential ambiguities, we further recommend adding the following  addi
 \item{[}'PN\textunderscore approximant'{]}: string identifier for the inspiral if hybrid data are stored
 \end{itemize}
 
-\harald{As indicated, vectors are represented by Cartesian components.
+As indicated, vectors are represented by their Cartesian components.
   These components must be specified in a coordinate system (referred
   to as ``NR frame'') consistent with the one used in the
 decomposition in spherical harmonics (e.g. the polar axis of the
-spherical harmonics must point along the +z axis).  No requirements
-are placed on the orientation of the NR frame.  For instance, {\tt
+spherical harmonics must point along the +z-axis).  No requirements
+are placed on the orientation of the NR frame. For instance, {\tt
   nhat} and {\tt LNhat} need not point along specific coordinate axes.
 Note also that the spin-fields in the metadata
 \texttt{spin\{1,2\}\{x,y,z\}} are given in the NR frame, and
 \emph{not} in the LAL frame.  The rotation of the GW modes into the
-LAL frame is performed by the NR injection infrastructure,
-following conventions described in Sec.~\ref{sec:coordinates}.}
+LAL frame is taken care of by the NR injection infrastructure,
+following the conventions described in Sec.~\ref{sec:coordinates}.
 
 
 
@@ -314,10 +306,10 @@ following conventions described in Sec.~\ref{sec:coordinates}.}
 \label{sec:gen}
 %%%%%%%%%%%%%%%
 Once the HDF5 file has been provided, the NR waveforms can be evaluated through the standard waveform interfaces \texttt{ChooseTDWaveform()} in LAL and \texttt{get\textunderscore td\textunderscore waveform()} in pyCBC~\cite{Canton:2014ena}. The approximant name is ``NR\textunderscore hdf5''. 
-The spline data are read from file and evaluated for the desired extrinsic parameters. \harald{Since some intrinsic parameters of an NR simulations are fixed (e.g. mass-ratio and dimensionless spins)}, internal checks on the mass ratio and the spin components are performed to guarantee the consistency between the values passed in the waveform generation call and metadata values. The waveform generator requires the input spin values to be defined as given in Eqn.~(\ref{eq:SpinConsistency}). In general, these are different to the values of the spin metadata and need to be computed using the metadata for the spins, the orbital angular momentum and the orbital separation.\\
+The spline data are read from file and evaluated for the desired extrinsic parameters. Since some intrinsic parameters of an NR simulations are fixed (e.g. mass-ratio and dimensionless spins), internal checks on the mass ratio and the spin components are performed to guarantee the consistency between the values passed in the waveform generation call and metadata values. \\
+Note: The waveform generator requires the input spin values to be defined as given by Eqn.~(\ref{eq:SpinConsistency}). In general, these are different to the values of the spin metadata and need to be computed using the metadata for the spins, the orbital angular momentum and the orbital separation. 
 \\For a given starting frequency and total mass, a time array is allocated based on an estimate of the waveform length. We use the LAL function 
-\texttt{SimIMRSEOBNRv2ChirpTimeSingleSpin()} to estimate the waveform length with an additional leverage of 10\%. If the NR waveforms are not long enough for a given total mass and starting frequency, the generation is aborted.  \red{[HP describe what happens then: Is an error generated?  Is an empty array returned?  Is a \emph{longer} array allocated and the calculation proceeds?]}  From the estimated length and the desired sampling rate, the discrete time series for the spline evaluation is
-determined.\\
+\texttt{SimIMRSEOBNRv2ChirpTimeSingleSpin()} to estimate the waveform length with an additional leverage of 10\%. If the NR waveforms are not long enough for a given total mass and starting frequency, the generation is aborted and error is generated. From the estimated length and the desired sampling rate, the discrete time series for the spline evaluation is determined.\\
 
 To construct the NR GW polarisations $h^\mathrm{NR}_+$ and $h^\mathrm{NR}_\times$, the splines for each amplitude and phase are evaluated at the points of the discrete time times, weighted by the ${}^{-2}Y_{lm}$, and summed up accordingly:
 \begin{align}
@@ -336,10 +328,8 @@ the splines are constructed from the HDF5 file via the python function \texttt{U
 is performed. Fig.~\ref{fig:waveforms} shows an example comparison between NR waveforms obtained using the pyCBC and the LAL waveform generators. The mismatch
 between the waveforms is less than $10^{-7}$. This is consistent with the level of disagreement expected due to the different numerical interpolation
 routines. \\
-The source code can be found in
-\begin{lstlisting}
-lalsuite/lalsimulation/src/LALSimIMRNRWaveforms.c  
-\end{lstlisting}
+The source code can be found in \texttt{lalsuite/lalsimulation/src/LALSimIMRNRWaveforms.c}.
+
 
 %%%%%%%%%%
 \subsection{Examples}
