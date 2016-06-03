@@ -1,12 +1,12 @@
 \documentclass[aps,prd,amssymb,amsmath,amsfonts,superscriptaddress,
-floatfix ,preprintnumbers,altaffilletter]{revtex4}
+floatfix ,preprintnumbers,altaffilletter,11pt]{revtex4}
 
 \usepackage{epsfig}
 \usepackage{graphics}
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb,mathrsfs}
 \usepackage{amsfonts}
-\usepackage{color}
+\usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{wasysym}
 \usepackage{times}
 \usepackage{mathptmx}
@@ -19,12 +19,14 @@ floatfix ,preprintnumbers,altaffilletter]{revtex4}
 %\usepackage{authblk}
 \usepackage{listings}
 \usepackage{url}
+\usepackage[normalem]{ulem} 
 
 %%%%%Some new commands%%%%%%%%%%%%%%%%%
 % Macros for text changes
 \newcommand{\red}{\textcolor{red}}
 \newcommand{\patricia}[1]{\textcolor{blue}{\textit{Patricia: #1}}}
 \newcommand{\ian}[1]{\textcolor{blue}{\textit{Ian: #1}}}
+\newcommand{\harald}[1]{\textcolor{Cerulean}{#1}}
 
 \newcommand{\AEI}{Max Planck Institute for Gravitational Physics (Albert-Einstein-Institute), Am M\"uhlenberg 1, Potsdam-Golm, 14476, Germany}
 \newcommand{\Ligo}{LIGO Laboratory, California Institute of Technology, MS 100-36, Pasadena, California 91125, USA}
@@ -125,28 +127,41 @@ data into the correct LAL frame.
 \section{Introduction}
 \label{sec:intro}
 %%%%%%%%%%%%%%%
-Recently, LIGO has reported the first detection of gravitational waves (GW) from a merging binary black hole system~\cite{Abbott:2016blz}.
-Such coalescing compact binaries are prime sources for the ground-bases interferometric GW detectors and play a critical role in LIGO data analysis. Whilst for low-mass systems only the early part of the binary evolution, the inspiral, is accessible to LIGO, for high-mass systems 
+LIGO reported the first detection of gravitational waves (GW) from a merging binary black hole system~\cite{Abbott:2016blz}.
+Such coalescing compact binaries are prime sources of GWs for ground-based interferometric GW detectors and play a critical role in LIGO data analysis.  Whilst for low-mass systems only the early part of the binary evolution, the inspiral, is accessible to LIGO, for high-mass systems 
 also the later stages, in particular the merger and ringdown of the final black, are visible in LIGO's sensitivity band. 
 
-During the early part of the binary coalescence, the emitted gravitational waveforms are accurately described by an
-analytic post-Newtonian expansion of the Einstein field equations~\cite{lrr-2014-2}. 
+During the early part of the binary coalescence, the emitted gravitational waveforms are accurately described by
+analytic post-Newtonian expansions of the Einstein field equations~\cite{lrr-2014-2}. 
 To obtain the waveforms for the final stages, the full non-linear solutions
 of the field equations are required, which are provided by Numerical Relativity (NR) (see for example~\cite{Centrella:2010mx} for an overview).
-Regarding the usage of NR waveforms for LIGO data analysis, so far, NR merger waveforms have predominantly been used to calibrate the merger-ringdown section of analytic waveform models which describe the complete inspiral-merger-ringdown (IMR) signal~\cite{Khan:2015jqa, Taracchini:2013rva}, to test such models against independent NR waveforms not used in the construction and to determine the physical properties of the remnant black hole~\cite{Healy:2014yta}.
 
-In the Advanced detector era, however, we want to be able to directly use NR waveforms in gravitational-wave searches
+\harald{The most important impact of numerical relativity on LIGO data analysis
+is the construction of waveform models for the complete inspiral-merger-ringdown (see~\cite{Ohme:2011rm} for a review).  Such waveform models~\cite{Khan:2015jqa, Taracchini:2013rva} underpin LIGO's  GW searches, parameter estimation and tests of General relativity~(\cite{Abbott:2016blz} and references therein).  
+In the analysis of GW150914, numerical simulations were also used to determine the remnant black hole's mass and spin, and to investigate systematic biases due to waveform modeling errors.
+%Numerical simulations were also used to validate waveform models (e.g.~\cite{Kumar:2016dhh} and to test data-analysis algorithms~\cite{Aylott:2009ya,Aasi:2014tra}
+}
+\sout{Regarding the usage of NR waveforms for LIGO data analysis, so far, NR merger waveforms have predominantly been used to calibrate the merger-ringdown section of analytic waveform models which describe the complete inspiral-merger-ringdown (IMR) signal~cite{Khan:2015jqa, Taracchini:2013rva}, to test such models against independent NR waveforms not used in the construction and to determine the physical properties of the remnant black hole~\cite{Healy:2014yta}.}
+
+
+In the Advanced detector era, \harald{it is very advantageous} \sout{however, we want} to be able to directly use NR waveforms in gravitational-wave searches
 and parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within
-a uniform framework. 
-This is now possible with the recently implemented  simple infrastructure, which allows for the treatment of
-NR waveforms as a ``discrete'' waveform approximant provided the NR data are available in a \emph{specific format}. 
+a uniform framework.   \harald{Such use of NR waveforms should be easy and convenient.}
+This is now possible with the \harald{\emph{Numerical Relativity Injection Infrastructure} described in this document.   Once the NR data is provided in a specific format (as described below), this infrastructure} allows for the treatment of
+NR waveforms as a ``discrete'' waveform approximant\harald{, which can seamlessly called from within the LIGO Algorithm Library (LAL)}.
 
 In previous efforts, BBH hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown 
-waveform, have been used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}. These hybrids only contained the dominant harmonics, the $(\ell, |m|) =(2,2)$ modes, and required the NR waveforms to be linearly interpolated and resampled at uniform times for a given sampling rate $f_s$. In the NINJA framework, the resampling was performed 
- \emph{before} inserting the total mass scale, resulting in very memory-intensive operations, since the finest $\Delta t$ for a given $f_s$ is determined by the highest total mass one wants to be able to resolve.
-  
-The new infrastructure handles this differently, in the following way: Firstly, since it naturally handles higher-order modes, it uses a highly compressed data format to represent the NR data to reduce the storage requirements and reduce I/O time. 
-Secondly, the compressed NR data are interpolated using 1D spline interpolation, and the resulting interpolants are evaluated \emph{after} the mass scale has been inserted. This avoids high-memory operations and also bypasses the need to store unnecessarily large data files.
+waveform, were used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}.  \sout{These hybrids only contained the dominant harmonics, the $(\ell, |m|) =(2,2)$ modes,} \harald{
+The data format employed~\cite{Brown:2007jx} required the NR waveforms to be resampled to a uniform time-spacing.  In the NINJA framework, the resampling was performed 
+ \emph{before} inserting the total mass scale.  For the waveforms to be
+useable at high total mass, the time-spacing in the NR data had to be very small, resulting in very large storage requirements, even if only the dominant haromonics $(\ell,m)=(2,\pm 2)$ were supplied.}  \sout{...
+ resulting in very memory-intensive storage requirements, since the finest $\Delta t$ for a given $f_s$ is determined by the highest total mass one wants to be able to resolve.}
+
+\harald{The new infrastructure described here improves on the earlier approaches
+in several significant ways. First, data is stored in a highly efficient compressed format;  even including a large number of sub-dominant modes (as is now encouraged), storage requirements are lower than just for the dominant modes in the preceeding storage format.  
+Second, the compressed NR data are interpolated with 1D spline interpolation \emph{after} the mass scale is inserted. This avoids high-memory operations and further reduces storage requirements and I/O times.  Third, the new infrastructure handles projection of the NR data onto
+arbitrary source-location and detector orientation using the same conventions
+as LAL. }
 The new injection infrastructure fully implemented in LAL and is intended to supersede any previously used NR modules.
 
 The remainder of this technical document is organised as follows: In Sec. \ref{sec:format} we provide a brief summary
