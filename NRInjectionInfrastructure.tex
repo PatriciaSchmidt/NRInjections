@@ -1,5 +1,7 @@
-\documentclass[aps,prd,amssymb,amsmath,amsfonts,superscriptaddress,
-floatfix,preprintnumbers,altaffilletter,11pt]{revtex4}
+%\documentclass[aps,prd,amssymb,amsmath,amsfonts,superscriptaddress,
+%floatfix,preprintnumbers,altaffilletter,11pt]{revtex4}
+
+\documentclass[11pt,tightenlines,article,amssymb,amsmath,amsfonts,superscriptaddress]{revtex4}
 
 \usepackage{epsfig}
 \usepackage{graphics}
@@ -105,7 +107,7 @@ floatfix,preprintnumbers,altaffilletter,11pt]{revtex4}
 \date{\today}
 
 \begin{flushright}
-LIGO-T1500606-v2
+LIGO-T1500606-v3
 \end{flushright}
 
 %%%%%%%%%%%%%%%
@@ -137,13 +139,8 @@ analytic post-Newtonian expansions of the Einstein field equations~\cite{lrr-201
 To obtain the waveforms for the final stages, the full non-linear solutions
 of the field equations are required, which are provided by Numerical Relativity (NR) (see for example~\cite{Centrella:2010mx} for an overview).
 
-\harald{One of the most important impact of numerical relativity on LIGO data analysis
-is the construction of waveform models for the complete inspiral-merger-ringdown (see~\cite{Ohme:2011rm} for a review). Such waveform models~\cite{Khan:2015jqa, Taracchini:2013rva} underpin LIGO's  GW searches, parameter estimation and tests of General relativity~(\cite{Abbott:2016blz} and references therein).  
-In the analysis of GW150914, numerical simulations were also used to determine the remnant black hole's mass and spin, and to investigate systematic biases due to waveform modeling errors.
-%Numerical simulations were also used to validate waveform models (e.g.~\cite{Kumar:2016dhh} and to test data-analysis algorithms~\cite{Aylott:2009ya,Aasi:2014tra}
-}
-\sout{Regarding the usage of NR waveforms for LIGO data analysis, so far, NR merger waveforms have predominantly been used to calibrate the merger-ringdown section of analytic waveform models which describe the complete inspiral-merger-ringdown (IMR) signal~cite{Khan:2015jqa, Taracchini:2013rva}, to test such models against independent NR waveforms not used in the construction and to determine the physical properties of the remnant black hole~\cite{Healy:2014yta}.}
-
+One of the most important impact of numerical relativity on LIGO data analysis
+is the construction of waveform models for the complete inspiral-merger-ringdown (see~\cite{Ohme:2011rm} for a review). Such waveform models~\cite{Khan:2015jqa, Taracchini:2013rva} underpin LIGO's  GW searches, parameter estimation and tests of general relativity~(\cite{Abbott:2016blz} and references therein).  In the analysis of GW150914, numerical simulations were also used to determine the remnant black hole's mass and spin~\cite{Healy:2014yta}, and to investigate systematic biases due to waveform modeling errors.
 
 In the Advanced detector era, it is very advantageous to be able to directly use NR waveforms in gravitational-wave searches
 and parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within
@@ -185,7 +182,7 @@ has two independent real polarisations, $h_+$ and $h_\times$, which can be writt
 \label{ }
 h = h_+ - i h_\times \in \mathbb{C},
 \end{equation}
-where $h_+, h_\times \in \mathbb{R}$.
+where $h_+, h_\times \in \mathbb{R}$. \\
 
 Let $(t,x,y,z)$ be a Cartesian coordinate system in the wave-zone, which is related to the polar coordinates $(r, \theta, \phi)$ by the standard means. In this coordinate system, the metric perturbation is commonly decomposed into \emph{modes}
 in a basis of spin-weighted spherical harmonics, ${}^{-2}Y_{\ell m}$, of spin weight $s=-2$, where the GW propagation direction is
@@ -216,27 +213,22 @@ Gravitational waveforms for LIGO data analysis purposes require uniform sampling
 NR datasets however, are commonly not uniformly sampled and if they are, the sampling interval $dt$ may not necessarily
 correspond to the one required by data analysis tools. 
 It is therefore unavoidable to interpolate the NR data to the desired sampling rate. Whilst the NR data could simply be interpolated as
-they are, we choose to reduce the data by performing 1D spline compression on the NR data~\cite{Galley:2016aa}. This is a particular advantage for long simulations or hybrid PN-NR data, but also significantly reduces the storage and I/O for pure NR data. 
-
-\sout{It is mandatory that the NR data files are provided in the correct compressed file format, which is as follows: \\}
+they are, we choose to reduce the data by performing 1D spline compression on the NR data~\cite{Galley:2016aa}. This is a particular advantage for long simulations or hybrid PN-NR data, but also significantly reduces the storage and I/O for pure NR data. \\
 
 The 1D spline compression is performed separately for each {\bf mode amplitude} $A_{\ell m}$ and {\bf phase} $\Phi_{\ell m}$, which are
 already time-shifted such that $t=0$ corresponds to the peak of the waveform. The routine employed to compress and interpolate the data is the \emph{reduced-order spline interpolation} presented in~\cite{Galley:2016aa}. It uses a greedy algorithm, which selects the near-optimal points to construct a univariate spline interpolant with a specified global accuracy.
 By default, the interpolants are constructed using fifth degree polynomials and a tolerance of $10^{-6}$,
 i.e., if the spline is evaluated at the discrete times $t_i$ of the NR data, which were not selected by the greedy algorithm, the original NR values are recovered with an error equal to or smaller than the specified tolerance. In addition, a median error can be associated with any predicted value, i.e., a value not contained in the original NR data. 
-For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016aa}. The spline compression is conveniently performed using the publicly available Python package \texttt{romSpline} by Chad R. Galley~\cite{romspline}. 
-
-The spline interpolants for each amplitude and phase are obtained via \verb"romSpline.ReducedOrderSpline()" as follows: 
+For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016aa}. The spline compression is conveniently performed using the publicly available Python package \texttt{romSpline} by Chad R. Galley~\cite{romspline}. \\
+\\The spline interpolants for each amplitude and phase are obtained via \verb"romSpline.ReducedOrderSpline()" as follows: 
 \begin{alltt}
 import romSpline 
 spline = romSpline.ReducedOrderSpline(\(t\), \(A\sb{\ell,m}(t)/\phi\sb{\ell,m}(t)\), verbose=False)
 spline.write('filename.h5')
 \end{alltt}
-
 The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series. 
-Note: a newer version of romSpline now also allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file, without the need for an intermediate step.
-
-Once the spline interpolants have been obtained, they have to be stored as individual groups in a \emph{single HDF5 file} with the following mandatory group naming conventions: 
+Note: a newer version of romSpline now also allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file, without the need for an intermediate step.\\
+\\Once the spline interpolants have been obtained, they have to be stored as individual groups in a \emph{single HDF5 file} with the following mandatory group naming conventions: 
 \begin{itemize}
   \item Amplitude group: \textbf{amp\textunderscore l\#1\textunderscore m\#2}
   \item Phase group: \textbf{phase\textunderscore  l\#1\textunderscore m\#2},
@@ -251,7 +243,7 @@ In addition to the amplitude and phase groups, we recommend to also include the 
 \label{sec:meta}
 %%%%%%%%%%%%%%%
 The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}. The metadata are described in the following list, and are 
-stored as \emph{attributes} of the HDF5 file. Often, more extensive metadata is available for a NR simulation. We recommend that such additional metadata is included as a free-format text data-set the HDF5 file.
+stored as \emph{attributes} of the HDF5 file. Often, more extensive metadata is available for a NR simulation. We recommend that such additional metadata is included as a free-format text data-set the HDF5 file. \\
 
 In the current implementation, those required metadata which are time-dependent (see list below) have to contain the values associated with the first entry in the stored time series. For pure NR data, since the junk radiation has to be removed, these are \emph{not} the initial data of the simulation. We refer to this very first data point stored in the HDF5 file as the \emph{beginning} of the waveform data. Source frame dependent metadata should be given in the NR simulation frame. \\
 
@@ -334,15 +326,32 @@ The source code can be found in \texttt{lalsuite/lalsimulation/src/LALSimIMRNRWa
 %%%%%%%%%%
 \subsection{Examples}
 %%%%%%%%%%
-There are a variety of different ways to generate waveforms using LIGO data analysis software. Here, we give two explicit examples
-for function calls in python: The first example uses the pyCBC implementation, the second one uses the SWIG-wrapped version of 
-lalsimulation. 
+There are a variety of different ways to evaluate NR waveforms using LIGO data analysis software. Here, we give two explicit examples
+for function calls in Python: The first example uses the uses the SWIG-wrapped version of lalsimulation, the send one the pyCBC implementation.
 
 \begin{enumerate}
-  \item Using the pyCBC waveform interface \texttt{get\textunderscore td\textunderscore waveform()} :\\
-\begin{lstlisting}
-from pycbc.waveform import get_td_waveform 
 
+\item Using the implementation in lalsimulation through SWIG:
+\begin{alltt}
+import lalsimulation as lalsim
+flags = lalsim.SimInspiralCreateWaveformFlags()
+lalsim.SimInspiralSetNumrelData(flags,'/PATH/TO/HDF5')
+hp, hc = lalsim.SimInspiralChooseTDWaveform(phiRef, 
+              deltaT, m1 * MSUN_SI, m2 * MSUN_SI, 
+              s1x, s1y, s1z,
+              s2x, s2y, s2z, 
+              fStart, fRef, 
+              distance, inclination,
+              \(\lambda\sb{1}=0\), \(\lambda\sb{2}=0\), 
+              flags, nonGRparams=None, 
+              amplitudeO=-1, phaseO=-1, 
+              approximant=lalsim.NR_hdf5),
+\end{alltt}
+where $\lambda_1$ denote the tidal deformation parameters, which vanish in the case of black holes. 
+
+\item Using the pyCBC waveform interface \texttt{get\textunderscore td\textunderscore waveform()}:
+\begin{alltt}
+from pycbc.waveform import get_td_waveform 
 hp, hc = get_td_waveform(approximant='NR_hdf5', 
                          numrel_data='/PATH/TO/HDF5',
                          mass1, mass2,
@@ -351,28 +360,7 @@ hp, hc = get_td_waveform(approximant='NR_hdf5',
                          delta_t, f_lower, f_ref,
                          inclination, distance, 
                          coa_phase)
-\end{lstlisting}
-
-\item Using the implementation in lalsimulation through SWIG:\\
-\begin{lstlisting}[mathescape=true]
-import lalsimulation as lalsim
-
-flags = lalsim.SimInspiralCreateWaveformFlags()
-
-lalsim.SimInspiralSetNumrelData(flags,'/PATH/TO/HDF5')
-
-hp, hc = lalsim.SimInspiralChooseTDWaveform(phiRef, 
-              deltaT, m1 * MSUN_SI, m2 * MSUN_SI, 
-              s1x, s1y, s1z,
-              s2x, s2y, s2z, 
-              fStart, fRef, 
-              distance, inclination,
-              $\lambda_1=0$, $\lambda_2=0$, 
-              flags, nonGRparams=None, 
-              amplitudeO=-1, phaseO=-1, 
-              approximant=lalsim.NR_hdf5),
-\end{lstlisting}
-where $\lambda_1$ denote the tidal deformation parameters, which vanish in the case of black holes. 
+\end{alltt}
 \end{enumerate}
 Fig.~\ref{fig:waveforms} shows the two waveform polarizations $h_+$ and $h_{\times}$ for the binary black hole hole case simulated in case 
 SXS:BBH:0019 from the publicly available SXS catalogue~\cite{Mroue:2013xna} for a total mass of 50 $\mathrm{M}_\odot$. The dimensionless spins for this simulation are
@@ -1117,13 +1105,13 @@ The user must supply the location of the HDF5 file, a functionality which was al
 previously used in lalsimulation. Secondly, the user must be careful to supply the mass ratio and spin values that
 are consistent with the NR files, and the spin values have to be specified in the LAL source frame (see Eqn. (\ref{eq:SpinConsistency})). \\
 
-The current implementation still suffers from a few caveats and drawbacks. As opposed to the continuous waveform approximants, at the moment the metadata are only referring to the beginning of the waveform and not some reference time, which can be chosen freely. While this is not a problem for aligned-spin binaries, this is a big concern for precessing simulations since various quantities, in particular the spins and the orbital angular momentum, are time-dependent. To fully integrate this desired freedom, additional information needs to be incorporated into the HDF5 files and the waveform generator functions accordingly. 
-\harald{Specifically, one needs the time-series of the vectors determining the geometry of the binary: $\lNR(t), \nNR(t), \chi_(t), \chi_2(t)$.  Given these time-series, one can interpolate these four vectors to any reference epoch, and then apply the frame transformations at this reference epoch.}
+The current implementation still suffers from a few caveats and drawbacks. As opposed to the continuous waveform approximants, at the moment the metadata are only referring to the beginning of the waveform and not some reference time, which can be chosen freely. While this is not a problem for aligned-spin binaries, this is a big concern for precessing simulations since various quantities, in particular the spins and the orbital angular momentum, are time-dependent. To fully integrate this desired freedom, additional information needs to be incorporated into the HDF5 files and the waveform generator functions accordingly. Specifically, one needs the time-series of the vectors determining the geometry of the binary: $\lNR(t), \nNR(t), \chi_(t), \chi_2(t)$.  Given these time-series, one can interpolate these four vectors to any reference epoch, and then apply the frame transformations at this reference epoch.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%Acknowledgements%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
-We thank Kent Blackburn for carefully reading through the manuscript and providing useful comments.
-Many thanks for discussions regarding the frame coordinate transformations to Stas Babak, Jolien Creighton, Michael P\"urrer and Ricardo Sturani.
+We are grateful to Mark Hannam for many useful discussions and comments throughout the code review.
+We also thank Kent Blackburn and James Healy for providing useful comments on the manuscript.
+Many thanks for discussions regarding the frame coordinate transformations to Stas Babak, Jolien Creighton, Michael P\"urrer and Riccardo Sturani.
 %%%%%%%%%%%%%%%%%%%%%%%%%Appendices%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%References%%%%%%%%%%%%%%%%%
