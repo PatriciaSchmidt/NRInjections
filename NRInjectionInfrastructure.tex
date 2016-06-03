@@ -295,14 +295,17 @@ To reduce potential ambiguities, we further recommend adding the following  addi
 \end{itemize}
 
 \harald{As indicated, vectors are represented by Cartesian components.
-  These components must be specified in a coordinate system consistent
-  with the one used in the decomposition in spherical harmonics
-  (e.g. the polar axis of the spherical harmonics must point along the
-  +z axis).  No requirements are placed on the orientation of the
-  binary.  For instance, {\tt nhat} and {\tt LNhat} need not point
-  along specific coordinate axes.  The rotation of the GW modes is
-  taken care of by the NR injection infrastructure, following
-  conventions described in Sec.~\ref{sec:coordinates}.}
+  These components must be specified in a coordinate system (referred
+  to as ``NR frame'') consistent with the one used in the
+decomposition in spherical harmonics (e.g. the polar axis of the
+spherical harmonics must point along the +z axis).  No requirements
+are placed on the orientation of the NR frame.  For instance, {\tt
+  nhat} and {\tt LNhat} need not point along specific coordinate axes.
+Note also that the spin-fields in the metadata
+\texttt{spin\{1,2\}\{x,y,z\}} are given in the NR frame, and
+\emph{not} in the LAL frame.  The rotation of the GW modes into the
+LAL frame is performed by the NR injection infrastructure,
+following conventions described in Sec.~\ref{sec:coordinates}.}
 
 
 
@@ -311,9 +314,9 @@ To reduce potential ambiguities, we further recommend adding the following  addi
 \label{sec:gen}
 %%%%%%%%%%%%%%%
 Once the HDF5 file has been provided, the NR waveforms can be evaluated through the standard waveform interfaces \texttt{ChooseTDWaveform()} in LAL and \texttt{get\textunderscore td\textunderscore waveform()} in pyCBC~\cite{Canton:2014ena}. The approximant name is ``NR\textunderscore hdf5''. 
-The spline data are read from file and evaluated for the desired extrinsic parameters. The intrinsic parameters in NR simulations are fixed, internal checks on the mass ratio and the spin components are performed to guarantee the consistency between the values passed in the waveform generation call and metadata values. The waveform generator requires the input spin values to be defined as given in Eqn.~(\ref{eq:SpinConsistency}). In general, these are different to the values of the spin metadata and need to be computed using the metadata for the spins, the orbital angular momentum and the orbital separation.\\
+The spline data are read from file and evaluated for the desired extrinsic parameters. \harald{Since some intrinsic parameters of an NR simulations are fixed (e.g. mass-ratio and dimensionless spins)}, internal checks on the mass ratio and the spin components are performed to guarantee the consistency between the values passed in the waveform generation call and metadata values. The waveform generator requires the input spin values to be defined as given in Eqn.~(\ref{eq:SpinConsistency}). In general, these are different to the values of the spin metadata and need to be computed using the metadata for the spins, the orbital angular momentum and the orbital separation.\\
 \\For a given starting frequency and total mass, a time array is allocated based on an estimate of the waveform length. We use the LAL function 
-\texttt{SimIMRSEOBNRv2ChirpTimeSingleSpin()} to estimate the waveform length with an additional leverage of 10\%. If the NR waveforms are not long enough for a given total mass and starting frequency, the generation is aborted. From the estimated length and the desired sampling rate, the discrete time series for the spline evaluation is
+\texttt{SimIMRSEOBNRv2ChirpTimeSingleSpin()} to estimate the waveform length with an additional leverage of 10\%. If the NR waveforms are not long enough for a given total mass and starting frequency, the generation is aborted.  \red{[HP describe what happens then: Is an error generated?  Is an empty array returned?  Is a \emph{longer} array allocated and the calculation proceeds?]}  From the estimated length and the desired sampling rate, the discrete time series for the spline evaluation is
 determined.\\
 
 To construct the NR GW polarisations $h^\mathrm{NR}_+$ and $h^\mathrm{NR}_\times$, the splines for each amplitude and phase are evaluated at the points of the discrete time times, weighted by the ${}^{-2}Y_{lm}$, and summed up accordingly:
@@ -445,7 +448,7 @@ Furthermore, numerical relativity data is specified in whatever
 coordinates are employed during the numerical evolution, generally
 resulting in a third coordinate system.
 
-This note defines coordinate frames for use in LAL.  Specifically, we
+This section defines coordinate frames for use in LAL.  Specifically, we
 achieve:
 \begin{enumerate}
   \item Identification of a set of intrinsic parameters that fully
@@ -478,13 +481,13 @@ wave-frame.
 
 \subsubsection{NR waveform injections}
 
-NR data is assumed to be supplied in the data-format defined
-in~\cite{Brown:2007jx}, and so it needs to be transformed into the LAL
-wave-frame.  For a given reference time, an entire NR data-set could
-in principle be transformed into the LAL frame by suitable
-transformations of each $H_{\ell m}$-mode.  Applying such a rotation
-on the NR-data as a one-time pre-processing step before using it for
-injections suffers from two disadvantages:
+NR data are assumed to be supplied in the data-format defined in
+Sec.~\ref{sec:format} and~\ref{sec:gen}, and so it needs to be
+transformed into the LAL wave-frame.  For a given reference time, an
+entire NR data-set could in principle be transformed into the LAL
+frame by suitable transformations of each $H_{\ell m}$-mode.  Applying
+such a rotation on the NR-data as a pre-processing step
+before using it for injections suffers from two disadvantages:
 
 First, the person who prepares the NR-data for LAL-use must perform
 the rotation, and must do so correctly. Since NR data is prepared
@@ -492,16 +495,16 @@ separately by several NR groups, this opens the possibility of
 introducing errors in this step.  Second, for precessing systems, the
 orbital angular momentum $\lNR$ precesses.  Therefore, pre-rotating
 the NR-data locks in the reference point, and one would need to
-generate a new pre-rotated NR-data for a different reference point.
+generate different pre-rotated NR-data for a different reference point.
 Since NR data is in geometric units, the NR-data would have to be
 separately rotated whenever the total mass of an injection changes.
 
 To avoid both disadvantages, it is proposed to leave the NR-data in
-its original frame.  Instead, the transformations betweeen the
+its original frame (see Sec.~\ref{sec:format}).  Instead, the transformations betweeen the
 LAL-convention and the NR-data are applied \emph{at use} during the
-call to {\tt ChooseTDwaveform}.
+call to \texttt{get\_td\_waveform} or similar (cf. Sec.~\ref{sec:gen}).
 
-This note develops the necessary transformations to implement this
+This section develops the necessary transformations to implement this
 technique.  No assumptions are made on the NR-coordinate system, in
 order to allow for precession when NR-orbital angular momentum is
 typically \emph{not} along the z-axis of the NR-coordinate system.
@@ -510,12 +513,12 @@ for the NR waveform, as long as orbital angular momentum and vector
 connecting the two bodies are known at that point.
 
 
-\subsubsection{Outline}
+% \subsubsection{Outline}
 
-The rest of this note is organized as follows.
-Section~\ref{sec:Frames} defines NR-frame, source-frame and
-wave-frame.  Section~\ref{sec:Relations} collects formulae to convert
-from one frame to another.
+% The rest of this note is organized as follows.
+% Section~\ref{sec:Frames} defines NR-frame, source-frame and
+% wave-frame.  Section~\ref{sec:Relations} collects formulae to convert
+% from one frame to another.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Frames}
@@ -534,16 +537,10 @@ change in the spin-components tangential to the orbital plane.
 
 
 \begin{figure}
-  \includegraphics[width=80mm]{lalsiminspiral_orbitelements.png}
+  \includegraphics[width=80mm]{NRinj_orbitalelements.png}
   \caption{
-  \label{fig:frames} Previous LAL coordinate frames.
-    \red{This diagram needs to be replaced by a new one, with the
-      following changes: The $x$-axis should point along the line
-      connecting the origin with body 1.  The main-text $\phiRef$ is
-      the angle between line of ascending node and $\nNR$, i.e. the
-      sum of the picture $\Phi+\omega$.  The mean-anomaly
-      $\meanAnomaly$ in the main-text corresponds to the
-      picture-symbol $\Phi$.} For the recommended default
+  \label{fig:frames} Coordinate frames.
+  (x,y,z) denotes the source-frame and (X,Y,Z) the wave-frame. For the recommended default
     $\Omega=\pi/2$, the line of ascending nodes agrees with $\EyW$
     i.e. the rotation by the inclination angle $\iota$ is about the
     $\EyW$-axis.}
@@ -575,7 +572,7 @@ From these, spherical basis-vectors can be computed as usual
 \end{align}
 \end{subequations}
 
-NR data is assumed to be given in spherical-harmonic modes of the
+NR data is assumed to be represented by spherical-harmonic modes of the
 NR coordinates, as defined in the NINJA data-formats
 document~\cite{Brown:2007jx}:
 \begin{subequations}\label{eq:hNR}
@@ -586,13 +583,14 @@ document~\cite{Brown:2007jx}:
 \end{subequations}
 and
 \begin{align}\label{eq:H}
-  \sum_{\ell=2}^\infty\sum_{m=-\ell}^\ell H_{\ell m}&(\tGW)\;^{-2}Y_{\ell m}(\tNR,\pNR)\\
-  &= \frac{r}{M}\Big(\hpNR(\tGW)-i\hcNR(\tGW)\Big).\nonumber
+  \sum_{\ell=2}^\infty\sum_{m=-\ell}^\ell H_{\ell m}&(\tGW)\;^{-2}Y_{\ell m}(\tNR,\pNR)
+  = \frac{r}{M}\Big(\hpNR(\tGW)-i\hcNR(\tGW)\Big). %\nonumber
 \end{align}
-Specifically, the data-files are assumed to contain a time-series of
-the $H_{\ell m}(\tGW)$ modes; given an emission direction $(\tNR,\pNR)$,
-Eq.~(\ref{eq:H}) yields the GW modes $\hpNR(\tGW)$ and $\hcNR(\tGW)$, according to
-the convention Eqs.~(\ref{eq:hNR}).
+As explained in Sec.~\ref{sec:format}, the data-files are assumed to
+contain a compressed time-series of amplitudes and phases per
+Eq.~(\ref{ }).  Given an emission direction $(\tNR,\pNR)$,
+Eq.~(\ref{eq:H}) yields the GW modes $\hpNR(\tGW)$ and $\hcNR(\tGW)$,
+according to the convention Eqs.~(\ref{eq:hNR}).
 
 The gravitational wave data are given in a time-coordinate $\tGW$ of
 observers at large distance.
@@ -604,11 +602,11 @@ The dimensionless spin vectors of the two bodies,
 \begin{equation}\label{eq:chi}
   \vec\chi_1(t),\, \vec\chi_2(t);
 \end{equation}
-The direction from body 2 to body 1,
+the direction from body 2 to body 1,
 \begin{equation}
   \nNR(t);
 \end{equation}
-the direction of the orbital angular momentum,
+the direction of the Newtonian orbital angular momentum,
 \begin{equation}
   \hat L(t).
 \end{equation}
@@ -760,8 +758,7 @@ line-of-sight, i.e. they span the plane of the sky.
 The wave-frame is completely specified by three angles:
 \begin{enumerate}
   \item The angle $\phiRef$ between line of ascending node and $\nNR$
-    (at the reference time). \red{[In Fig.~\ref{fig:frames}, this
-      angle corresponds to $\phiRef+\omega$]}
+    (at the reference time). 
   \item The inclination $\iota$, i.e. the angle between orbital
     angular momentum $\lNR=\EzS$ and the line-of-sight $\EzW$.
   \item The angle $\Omega$ between the $\ExW$-axis and the line of
@@ -779,9 +776,10 @@ The gravitational wave modes are defined as
   \end{align}
 \end{subequations}
 where the superscript 'W' indicates the LAL wave-frame.  The angle
-$\Omega$ merely rotates the $\ExW$ and $\EyW$.  By definition
-Eq.~(\ref{eq:hW}), this merely rotates the polarization of the GW
-modes, and so $\Omega$ is fully degenerate with the GW polarization.  
+$\Omega$ merely rotates $\ExW$ and $\EyW$ into each other.  By
+definition Eq.~(\ref{eq:hW}), this merely rotates the polarization of
+the GW modes, and so $\Omega$ is fully degenerate with the GW
+polarization.
 
 
 %% The three angles that rotate the source-frame into to the wave-frame
@@ -817,9 +815,7 @@ $\meanAnomaly$.
 \subsubsection{From source-frame to wave-frame}
 
 The relation between source-frame and wave-frame can be easily derived
-following the three rotations that rotate one into the other frame:
-
-
+following the three rotations that rotate one frame into the other:
 Beginning in the source-frame, $\ExS, \EyS, \EzS$, we first apply the rotation
 by $\phiRef$ around $\EzS$, which yields a frame with basis-vectors $\hat p, \hat q, \EzS$:
 \begin{subequations}
