@@ -104,10 +104,10 @@
 \affiliation{\AEI}
 \affiliation{\CITA}
 
-\date{\today}
+%\date{\today}
 
 \begin{flushright}
-LIGO-T1500606-v3
+LIGO-T1500606-v4
 \end{flushright}
 
 %%%%%%%%%%%%%%%
@@ -146,22 +146,24 @@ In the Advanced detector era, it is very advantageous to be able to directly use
 and parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within
 a uniform framework. Such use of NR waveforms should be easy and convenient.
 This is now possible with the new \emph{Numerical Relativity Injection Infrastructure} described in this document. Once the NR data is provided in a specific format (as described below), this infrastructure allows for the treatment of
-NR waveforms as a ``discrete'' waveform approximant, which can seamlessly called from within the LIGO Algorithm Library (LAL).
+NR waveforms as a ``discrete'' waveform approximant, which can seamlessly be called from within the LIGO Algorithm Library (LAL).
 
-In previous efforts, BBH hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown 
+In previous efforts, binary-black-hole (BBH) hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown 
 waveform, were used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}.  
-The previously employed data format~\cite{Brown:2007jx} required the NR waveforms to be resampled to a uniform time-spacing.  In the NINJA framework, the resampling was performed \emph{before} inserting the total mass scale.  For the waveforms to be
-useable at high total mass, the time-spacing in the NR data had to be very small, resulting in very large storage requirements, even if only the dominant haromonics $(\ell,m)=(2,\pm 2)$ were supplied.
+However, the previously employed NR modules in LAL
+%data format~\cite{Brown:2007jx} 
+required the NR waveforms to be resampled to a uniform time-spacing. In the NINJA framework, the resampling was performed \emph{before} inserting the total mass scale.  For the waveforms to be
+useable at high total mass, the time-spacing in the NR data had to be very small, resulting in very large storage requirements, even if only the dominant harmonics $(\ell,m)=(2,\pm 2)$ were supplied.
 
 The new infrastructure described here improves on the earlier approaches
 in several significant ways. First, data is stored in a highly efficient compressed format;  even including a large number of sub-dominant modes (as is now encouraged), storage requirements are lower than just for the dominant modes in the preceding storage format.  
 Second, the compressed NR data are interpolated with 1D spline interpolation \emph{after} the mass scale is inserted. This avoids high-memory operations and further reduces storage requirements and I/O times.  Third, the new infrastructure handles projection of the NR data onto
 arbitrary source-location and detector orientation using the same conventions
-n LAL as other waveform families.
-The new injection infrastructure fully implemented in LAL and is intended to supersede any previously used NR modules.
+in LAL as other waveform families.
+The new injection infrastructure is fully implemented in LAL and is intended to supersede previously used NR modules.
 
 The remainder of this technical document is organised as follows: In Sec. \ref{sec:format} we provide a brief summary
-of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we describe the basics of the waveform generation code and give explicit examples of how the NR waveforms are evaluated in lalsimulation. Sec. \ref{sec:coordinates} details the frame transformations between the NR simulation frame and the LAL wave frame. We highlight caveats and desired future improvements in Sec.~\ref{sec:discussion}.
+of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we describe the basics of the waveform generation code and give explicit examples of how the NR waveforms are evaluated in \texttt{lalsimulation}. Sec. \ref{sec:coordinates} details the frame transformations between the NR simulation frame and the LAL wave frame. We highlight caveats and desired future improvements in Sec.~\ref{sec:discussion}.
 
 %%%%%%%%%%%%%%%
 \section{Waveform format}
@@ -169,7 +171,7 @@ of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we d
 %%%%%%%%%%%%%%%
 In Numerical Relativity one solves for the complete space-time of the binary system. For data analysis
 purposes however, one requires the gravitational-wave strain $h(t)$ far from the source. The relevant numerical quantity
-is the metric perturbation $h^{TT}_{ij}$ as computed in the transverse-traceless gauge (TT). 
+is the metric perturbation $h^\mathrm{TT}_{ij}$ as computed in the transverse-traceless gauge (TT). 
 
 There are different way of computing the metric perturbation from a numerical evolution. The most common methods include
 the use of the complex Weyl scalar $\Psi_4$, which is related to the metric perturbation via two time derivatives, or the
