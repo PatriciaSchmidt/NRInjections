@@ -252,8 +252,9 @@ In the current implementation, those required metadata which are time-dependent 
 The required metadata attributes are the following:
 \begin{itemize}
 \item {[}'NR-group'{]}: string to identify the NR group/code
-\item {[}'type'{]}: keyword description of the simulation. Allowed values are: aligned-spins, non-spinning, precessing.
-\item{[}'name'{]}: alternative simulation name or internal simulation identifier
+\item{[}'type'{]}: keyword description of the simulation as requested by the LIGO Open Science Center (LOSC). Required value: NRinjection.
+\item {[}'simulation-type'{]}: keyword description of the spin configuration. Allowed values are: aligned-spins, non-spinning, precessing.
+\item{[}'name'{]}: alternative simulation name or internal NR simulation identifier, e.g., SXS:BBH:0019 etc.
 \item{[}'object1'{]}: keyword description to identify the object type. Allowed values are: BH, NS
 \item {[}'object2'{]}: keyword description to identify the object type. Allowed values are: BH, NS
 \item{[}'mass1'{]}: mass of the heavier object; if both objects are 'BH', the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar masses $M_\odot$.
@@ -961,8 +962,8 @@ Eqs.~(\ref{eq:Source-To-Wave-Omega0}) yield
     \ExW &\equalref-\cos\iota\left[\sin\phiRef\,\nNR +\cos\phiRef\,\lNR\times\nNR\right]+\sin\iota\lNR,\\
     \EyW &\equalref \qquad\quad\;\,\cos\phiRef\,\nNR -\sin\phiRef\,\lNR\times\nNR,\\
 \label{eq:Z}
-    \EzW&\equalref\;\;\;\; \sin i\left[\sin\phiRef\,\nNR +\cos\phiRef\,\lNR\times\nNR\right]
-    +\cos i\,\lNR.
+    \EzW&\equalref\;\;\;\; \sin \iota\left[\sin\phiRef\,\nNR +\cos\phiRef\,\lNR\times\nNR\right]
+    +\cos \iota \,\lNR.
   \end{align}
 \end{subequations}
 
