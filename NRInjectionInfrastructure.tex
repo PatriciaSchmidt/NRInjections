@@ -34,9 +34,8 @@
 \newcommand{\AEI}{Max Planck Institute for Gravitational Physics (Albert-Einstein-Institute), Am M\"uhlenberg 1, Potsdam-Golm, 14476, Germany}
 \newcommand{\Ligo}{LIGO Laboratory, California Institute of Technology, MS 100-36, Pasadena, California 91125, USA}
 \newcommand{\TAPIR}{Theoretical Astrophysics, Walter Burke Institute for Theoretical Physics, California Institute of Technology, Pasadena, California 91125, USA}
-\newcommand{\CITA}{Canadian Institute for Theoretical
-    Astrophysics, 60 St.~George Street, University of Toronto,
-    Toronto, ON M5S 3H8, Canada}
+\newcommand{\Radboud}{Department of Astrophysics/IMAPP, Radboud University Nijmegen, P.O. Box 9010, 6525 GL Nijmegen, The Netherlands }
+\newcommand{\CITA}{Canadian Institute for Theoretical Astrophysics, 60 St.~George Street, University of Toronto, Toronto, ON M5S 3H8, Canada}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % SCIENCE MACROS
@@ -96,6 +95,7 @@
 \author{Patricia Schmidt}
 \affiliation{\Ligo}
 \affiliation{\TAPIR}
+\affiliation{\Radboud}
 
 \author{Ian W. Harry}
 \affiliation{\AEI}
@@ -116,11 +116,11 @@ LIGO-T1500606-v5
 %%%%%%%%%%%%%%%
 This document describes the new standardised NR injection infrastructure in the LIGO Algorithms Library (LAL), 
 which henceforth allows for the usage of Numerical Relativity (NR) waveforms as a discrete waveform approximant
-in LAL. With this new interface, NR waveforms provided in the appropriate format can directly be
+in LAL. With this new interface, NR waveforms provided in the described format can directly be
 used as mock GW signals (``injections'') for LIGO data analyses, which include parameter estimation, searches, hardware
-injections etc. The interface handles higher-order modes making them directly accessible to LIGO analyses for
+injections etc. The interface also handles higher-order modes making them directly accessible to LIGO analyses for
 the very first time. The NR injection infrastructure also takes care of waveform frame conventions and transforms the NR
-data into the correct LAL frame. 
+data into the coordinate frame convention used in LAL. 
 \end{abstract}
 
 %%%%%%%%%%%%%%%
@@ -130,17 +130,16 @@ data into the correct LAL frame.
 \section{Introduction}
 \label{sec:intro}
 %%%%%%%%%%%%%%%
-LIGO reported the first detection of gravitational waves (GW) from a merging binary black hole system~\cite{Abbott:2016blz}.
-Such coalescing compact binaries are prime sources of GWs for ground-based interferometric GW detectors and play a critical role in LIGO data analysis.  Whilst for low-mass systems only the early part of the binary evolution, the inspiral, is accessible to LIGO, for high-mass systems 
+LIGO reported the first detections of gravitational waves (GW) from merging binary black holes~\cite{Abbott:2016blz, Abbott:2016nmj, TheLIGOScientific:2016pea}.
+Such coalescing compact binaries are prime sources of GWs for ground-based interferometric GW detectors and play a critical role in LIGO data analysis. Whilst for low-mass systems only the early part of the binary evolution, the inspiral, is accessible to LIGO, for high-mass systems 
 also the later stages, in particular the merger and ringdown of the final black, are visible in LIGO's sensitivity band. 
 
 During the early part of the binary coalescence, the emitted gravitational waveforms are accurately described by
-analytic post-Newtonian expansions of the Einstein field equations~\cite{lrr-2014-2}. 
+analytic post-Newtonian (PN) expansions of the Einstein field equations~\cite{lrr-2014-2}. 
 To obtain the waveforms for the final stages, the full non-linear solutions
 of the field equations are required, which are provided by Numerical Relativity (NR) (see for example~\cite{Centrella:2010mx} for an overview).
 
-One of the most important impact of numerical relativity on LIGO data analysis
-is the construction of waveform models for the complete inspiral-merger-ringdown (see~\cite{Ohme:2011rm} for a review). Such waveform models~\cite{Khan:2015jqa, Taracchini:2013rva} underpin LIGO's  GW searches, parameter estimation and tests of general relativity~(\cite{Abbott:2016blz} and references therein).  In the analysis of GW150914, numerical simulations were also used to determine the remnant black hole's mass and spin~\cite{Healy:2014yta}, and to investigate systematic biases due to waveform modeling errors.
+Numerical Relativity already plays a crucial role in GW data analysis:the construction of waveform models that govern the complete inspiral-merger-ringdown signal (see~\cite{Ohme:2011rm} for a review) depend heavily on NR simulations. Such waveform models~\cite{Hannam:2013oca, Pan:2013rra, Taracchini:2013rva, Khan:2015jqa} underpin LIGO's GW searches, parameter estimation and tests of general relativity~(see \cite{Abbott:2016blz} and references therein). Furthermore, numerical simulations are crucial to determine the remnant black hole's mass and spin~\cite{Healy:2014yta}, and to investigate systematic biases due to waveform modeling errors~\cite{Abbott:2016wiq}.
 
 In the Advanced detector era, it is very advantageous to be able to directly use NR waveforms in gravitational-wave searches
 and parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within
@@ -148,19 +147,15 @@ a uniform framework. Such use of NR waveforms should be easy and convenient.
 This is now possible with the new \emph{Numerical Relativity Injection Infrastructure} described in this document. Once the NR data is provided in a specific format (as described below), this infrastructure allows for the treatment of
 NR waveforms as a ``discrete'' waveform approximant, which can seamlessly be called from within the LIGO Algorithm Library (LAL).
 
-In previous efforts, binary-black-hole (BBH) hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown 
-waveform, were used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}.  
+In previous efforts, binary-black-hole (BBH) hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown waveform, were used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}.  
 However, the previously employed NR modules in LAL
 %data format~\cite{Brown:2007jx} 
-required the NR waveforms to be resampled to a uniform time-spacing. In the NINJA framework, the resampling was performed \emph{before} inserting the total mass scale.  For the waveforms to be
-useable at high total mass, the time-spacing in the NR data had to be very small, resulting in very large storage requirements, even if only the dominant harmonics $(\ell,m)=(2,\pm 2)$ were supplied.
+require the NR waveforms to be resampled at a uniform time-spacing. In the NINJA framework, the resampling was performed \emph{before} inserting the total mass scale. For the waveforms to be
+useable at high total mass, the time-spacing in the NR data has to be very small, resulting in very large storage requirements, even if only the dominant harmonics $(\ell,m)=(2,\pm 2)$ is supplied.
 
 The new infrastructure described here improves on the earlier approaches
-in several significant ways. First, data is stored in a highly efficient compressed format;  even including a large number of sub-dominant modes (as is now encouraged), storage requirements are lower than just for the dominant modes in the preceding storage format.  
-Second, the compressed NR data are interpolated with 1D spline interpolation \emph{after} the mass scale is inserted. This avoids high-memory operations and further reduces storage requirements and I/O times.  Third, the new infrastructure handles projection of the NR data onto
-arbitrary source-location and detector orientation using the same conventions
-in LAL as other waveform families.
-The new injection infrastructure is fully implemented in LAL and is intended to supersede previously used NR modules.
+in several significant ways. First, data is stored in a highly efficient compressed format~\cite{Galley:2016mvy}; even including a large number of sub-dominant modes (as is now encouraged), storage requirements are lower than just for the dominant modes in the preceding storage format.  
+Second, the compressed NR data are interpolated with one-dimensional spline interpolation \emph{after} the mass scale is inserted. This avoids high-memory operations and further reduces storage requirements and I/O times. Third, the new infrastructure handles projection of the NR data onto arbitrary source-location and detector orientation using the same conventions in LAL as for other waveform families. The new injection infrastructure is fully implemented in LAL and is intended to supersede previously used NR modules.
 
 The remainder of this technical document is organised as follows: In Sec. \ref{sec:format} we provide a brief summary
 of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we describe the basics of the waveform generation code and give explicit examples of how the NR waveforms are evaluated in \texttt{lalsimulation}. Sec. \ref{sec:coordinates} details the frame transformations between the NR simulation frame and the LAL wave frame. We highlight caveats and desired future improvements in Sec.~\ref{sec:discussion}.
@@ -173,7 +168,7 @@ In Numerical Relativity one solves for the complete space-time of the binary sys
 purposes however, one requires the gravitational-wave strain $h(t)$ far from the source. The relevant numerical quantity
 is the metric perturbation $h^\mathrm{TT}_{ij}$ as computed in the transverse-traceless gauge (TT). 
 
-There are different way of computing the metric perturbation from a numerical evolution. The most common methods include
+There are different ways of computing the metric perturbation from a numerical evolution. The most common methods include
 the use of the complex Weyl scalar $\Psi_4$, which is related to the metric perturbation via two time derivatives, or the
 Regge-Wheeler-Zerilli formalism, which computes the metric perturbation in the wave-zone as a perturbation of the Schwarzschild
 spacetime. 
@@ -186,27 +181,29 @@ h = h_+ - i h_\times \in \mathbb{C},
 \end{equation}
 where $h_+, h_\times \in \mathbb{R}$. \\
 
-Let $(t,x,y,z)$ be a Cartesian coordinate system in the wave-zone, which is related to the polar coordinates $(r, \theta, \phi)$ by the standard means. In this coordinate system, the metric perturbation is commonly decomposed into \emph{modes}
+Let $(t,x,y,z)$ be a Cartesian coordinate system in the wave-zone, which is related to the polar coordinates $(r, \theta, \phi)$ by the standard means. In this coordinate system, henceforth referred to as the NR frame, the metric perturbation is commonly decomposed into \emph{modes}
 in a basis of spin-weighted spherical harmonics, ${}^{-2}Y_{\ell m}$, of spin weight $s=-2$, where the GW propagation direction is
 the radial unit vector r.
 For any point $(\theta, \phi)$ on the unit sphere, the GW strain can then be shown to take the following form:
 \begin{equation}
 \label{ }
-h^\mathrm{NR}(t; \theta, \phi) = h^\mathrm{NR}_+ - i h^\mathrm{NR}_\times = \sum_{\ell=2}^\infty \sum_{m=-\ell}^{\ell} H_{\ell m}(t) {}^{-2}Y_{\ell m}(\theta,\phi).
+h^\mathrm{NR}(t; \theta, \phi) = h^\mathrm{NR}_+ - i h^\mathrm{NR}_\times = \sum_{\ell=2}^\infty \sum_{m=-\ell}^{\ell} H_{\ell m}(t) {}^{-2}Y_{\ell m}(\theta,\phi),
 \end{equation}
-As for any wave, we can also write each NR gravitational-wave mode $H_{\ell m}$ as an amplitude $A_{\ell m}$ and a phase
-$\Phi_{\ell m}$,
+where $H_{\ell m}(t)$ denotes the extracted NR gravitational-wave modes.
+As for any wave, we can also write each mode $H_{\ell m}(t)$ as an amplitude $A_{\ell m}(t)$ and a phase
+$\Phi_{\ell m}(t)$,
 \begin{equation}
 \label{ }
 H_{\ell m}(t) = A_{\ell m}(t)e^{i\Phi_{\ell m}(t)}.
 \end{equation}
-The amplitude of each mode is its complex norm, the phase is the unwrapped argument of the complex time series $h_{\ell m}$. For a binary that is orbiting counter-clockwise in the xy-plane (i.e. orbital angular frequency vector is \emph{parallel} to the z-axis), $\Phi_{2,2}(t)$ is a monotonically {\bf decreasing} function.
+The mode amplitude $A_{\ell m}(t)$ is defined as the complex norm of the complex time series $H_{\ell m}(t)$, the phase $\Phi_{\ell m}(t)$ is the unwrapped argument of the complex time series $H_{\ell m}(t)$. For a binary that is orbiting counter-clockwise in the xy-plane of the NR frame (i.e., the orbital angular frequency vector is \emph{parallel} to the z-axis), $\Phi_{2,2}(t)$ is a monotonically {\bf decreasing} function.
 
-Following the LAL waveform convention, the time-coordinate $t$ in the waveform modes should be chosen such that the peak of the waveform occurs at $t_\mathrm{peak}=0$. We recommend to define ``peak'' of the waveform by 
+Following the LAL waveform convention, the time-coordinate $t$ in the waveform modes has to be chosen such that the peak of the waveform occurs at $t_\mathrm{peak} \equiv 0$, where the ``peak'' of the waveform is defined by 
 \begin{equation}
 \label{eq:peak}
-h_\mathrm{peak} = \max \left( \sum_{\ell, m} A_{\ell, m}^2 \right).
+h_\mathrm{peak} := \max \left( \sum_{\ell, m} A_{\ell m}(t)^2 \right).
 \end{equation}
+
 %%%%%%%%%%%%%%%
 \subsection{Spline Compression}
 \label{sec:spline}
@@ -215,85 +212,194 @@ Gravitational waveforms for LIGO data analysis purposes require uniform sampling
 NR datasets however, are commonly not uniformly sampled and if they are, the sampling interval $dt$ may not necessarily
 correspond to the one required by data analysis tools. 
 It is therefore unavoidable to interpolate the NR data to the desired sampling rate. Whilst the NR data could simply be interpolated as
-they are, we choose to reduce the data by performing 1D spline compression on the NR data~\cite{Galley:2016aa}. This is a particular advantage for long simulations or hybrid PN-NR data, but also significantly reduces the storage and I/O for pure NR data. \\
+they are, we choose to reduce the data by performing one-dimensional spline compression on the NR data~\cite{Galley:2016mvy}. This is a particular advantage for long simulations or hybrid data, but also significantly reduces the storage and I/O for pure NR data. \\
 
-The 1D spline compression is performed separately for each {\bf mode amplitude} $A_{\ell m}$ and {\bf phase} $\Phi_{\ell m}$, which are
-already time-shifted such that $t=0$ corresponds to the peak of the waveform. The routine employed to compress and interpolate the data is the \emph{reduced-order spline interpolation} presented in~\cite{Galley:2016aa}. It uses a greedy algorithm, which selects the near-optimal points to construct a univariate spline interpolant with a specified global accuracy.
+The one-dimensional spline compression is performed separately for each {\bf mode amplitude} $A_{\ell m}$ and {\bf phase} $\Phi_{\ell m}$, which are
+already time-shifted such that $t=0$ corresponds to the peak of the waveform. The routine employed to compress and interpolate the data is the \emph{reduced-order spline interpolation} presented in~\cite{Galley:2016mvy}. It uses a greedy algorithm that selects the near-optimal points to construct a univariate spline interpolant with a specified global accuracy and polynomial degree.
 By default, the interpolants are constructed using fifth degree polynomials and a tolerance of $10^{-6}$,
-i.e., if the spline is evaluated at the discrete times $t_i$ of the NR data, which were not selected by the greedy algorithm, the original NR values are recovered with an error equal to or smaller than the specified tolerance. In addition, a median error can be associated with any predicted value, i.e., a value not contained in the original NR data. 
-For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016aa}. The spline compression is conveniently performed using the publicly available Python package \texttt{romSpline} by Chad R. Galley~\cite{romspline}. \\
-\\The spline interpolants for each amplitude and phase are obtained via \verb"romSpline.ReducedOrderSpline()" as follows: 
+i.e., if the spline is evaluated at the original discrete NR times $t_i$, the original NR values are recovered with an error equal to or smaller than the specified tolerance. In addition, a median error can be associated with any predicted value, i.e., a value not contained in the original NR data. 
+For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016mvy}. The spline compression is conveniently performed using the publicly available Python package \texttt{romSpline} by Chad R. Galley~\cite{romspline}. \\
+\\The spline interpolants for each amplitude and phase are obtained via \verb"romSpline" as follows: 
 \begin{alltt}
 import romSpline 
-spline = romSpline.ReducedOrderSpline(\(t\), \(A\sb{\ell,m}(t)/\phi\sb{\ell,m}(t)\), verbose=False)
+spline = romSpline.ReducedOrderSpline(\(t\), \(A\sb{\ell,m}(t) or \phi\sb{\ell,m}(t)\), verbose=False)
 spline.write('filename.h5')
 \end{alltt}
 The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series. 
-Note: a newer version of romSpline now also allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file, without the need for an intermediate step.\\
-\\Once the spline interpolants have been obtained, they have to be stored as individual groups in a \emph{single HDF5 file} with the following mandatory group naming conventions: 
+Note: The latest version of \verb"romSpline" also allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file.\\
+\\Once all spline interpolants have been obtained, they have to be stored as individual groups in a \emph{single HDF5 file}, the final .h5 output file, with the following mandatory group naming conventions: 
 \begin{itemize}
   \item Amplitude group: \textbf{amp\textunderscore l\#1\textunderscore m\#2}
   \item Phase group: \textbf{phase\textunderscore  l\#1\textunderscore m\#2},
 \end{itemize}
 where (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the naming convention is phase\textunderscore l2\textunderscore m-2 and 
 amp\textunderscore l2\textunderscore m-2. \\
-\\Pure NR data without a hybridised PN inspiral need to have the initial \emph{junk radiation} removed before the spline interpolants are constructed but no tapering should be applied at the beginning or end of the waveform data.  
-In addition to the amplitude and phase groups, we recommend to also include the NR times, i.e., the 1D data array containing the original time-steps of the NR data, as a group in the HDF5 file. 
+\\Pure NR data without an inspiral need to have the initial \emph{junk radiation} removed \emph{before} the spline interpolants are constructed. We refer to this very first data point stored in the time series after removing the initial junk as the \emph{beginning} of the waveform.
+No tapering should be applied at the beginning or end of the waveform data.  \\
+In addition to the amplitude and phase groups, we highly recommend to also store the NR times, i.e., the one-dimensional data array containing the original time-steps of the NR data, as a dataset in the final HDF5 file. 
 
 %%%%%%%%%%%%%%%
 \subsection{Metadata}
 \label{sec:meta}
 %%%%%%%%%%%%%%%
-The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}. The metadata are described in the following list, and are 
-stored as \emph{attributes} of the HDF5 file. Often, more extensive metadata is available for a NR simulation. We recommend that such additional metadata is included as a free-format text data-set the HDF5 file. \\
+The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}. The metadata are described in the following list, and are stored as \emph{attributes} of the HDF5 file. Often, more extensive metadata are available for a NR simulation. We recommend that such additional metadata is included as a free-format text dataset in the 'auxiliary-info' H5-group (see below). 
 
-In the current implementation, those required metadata which are time-dependent (see list below) have to contain the values associated with the first entry in the stored time series. For pure NR data, since the junk radiation has to be removed, these are \emph{not} the initial data of the simulation. We refer to this very first data point stored in the HDF5 file as the \emph{beginning} of the waveform data. Source frame dependent metadata should be given in the NR simulation frame. \\
+Required time-dependent metadata (see list below) have to contain the values corresponding to the first entry in the stored time series. For pure NR data, since the junk radiation has to be removed, these are \emph{not} the initial data of the simulation. We refer to this very first data point stored in the time series as the \emph{beginning} of the waveform data. 
 
-The required metadata attributes are the following:
+Vectors are represented by their Cartesian components. These components must be specified in a coordinate system consistent with the one used in the decomposition in spherical harmonics (e.g. the polar axis of the spherical harmonics must point along the +z-axis), the NR frame. No requirements are placed on the orientation of the NR frame. For instance, 'nhat' and 'LNhat' need not point along specific coordinate axes. Note also that the spin-fields in the metadata 'spin\{1,2\}\{x,y,z\}' are given in the NR frame, and \emph{not} in the LAL frame. The rotation of the GW modes into the LAL frame is taken care of by the NR injection infrastructure, following the conventions described in Sec.~\ref{sec:coordinates}. \\
+\newline
+Three versions of .h5 files are compatible. All of them require the following metadata stored as attributes of the .h5 file: 
+
 \begin{itemize}
-\item {[}'NR-group'{]}: string to identify the NR group/code
-\item{[}'type'{]}: keyword description of the simulation as requested by the LIGO Open Science Center (LOSC). Required value: NRinjection.
-\item {[}'simulation-type'{]}: keyword description of the spin configuration. Allowed values are: aligned-spins, non-spinning, precessing.
-\item{[}'name'{]}: alternative simulation name or internal NR simulation identifier, e.g., SXS:BBH:0019 etc.
-\item{[}'object1'{]}: keyword description to identify the object type. Allowed values are: BH, NS
-\item {[}'object2'{]}: keyword description to identify the object type. Allowed values are: BH, NS
-\item{[}'mass1'{]}: mass of the heavier object; if both objects are 'BH', the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar masses $M_\odot$.
-\item{[}'mass2'{]}: mass of the lighter object; if both objects are 'BH', the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar masses $M_\odot$.
-\item{[}'eta'{]}: the symmetric mass ratio of the simulation
-\item{[}'spin1x'{]}: x-component of the dimensionless spin of the heavier object
-\item{[}'spin1y'{]}: y-component of the dimensionless spin of the heavier object 
-\item{[}'spin1z'{]}: z-component of the dimensionless spin of the heavier object
-\item{[}'spin2x'{]}: x-component of the dimensionless spin of the lighter object
-\item{[}'spin2y'{]}: y-component of the dimensionless spin of the lighter object 
-\item{[}'spin2z'{]}: z-component of the dimensionless spin of the lighter object
-\item{[}'LNhatx'{]}: x-component of the orbital angular momentum unit vector
-\item{[}'LNhaty'{]}: y-component of the orbital angular momentum unit vector
-\item{[}'LNhatz'{]}: z-component of the orbital angular momentum unit vector
-\item{[}'nhatx'{]}: x-component of the orbital separation unit vector
-\item{[}'nhaty'{]}: y-component of the orbital separation unit vector
-\item{[}'nhatz'{]}: z-component of the orbital separation unit vector
-\item{[}'f\textunderscore lower\textunderscore at\textunderscore 1MSUN'{]}: frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to 1 solar mass
+\item{[}'Format'{]}: integer; indicates what metadata are supplied. Must be 1, 2, 3.
+
+\item{[}'type'{]}: string; keyword description of the simulation as requested by the LIGO Open Science Center (LOSC). Required value: NRinjection.
+
+\item{[}'name'{]}: string; short identifier of the simulation, e.g., SXS:BBH:0019
+
+\item{[}'alternative-names'{]}: string; comma-separated list of user-specifiable alternative names. These names can be longer, more descriptive, and/or include what specific series of simulations this configuration belongs to.
+
+\item {[}'NR-group'{]}: string;  name of the NR group
+
+\item {[}'NR-code'{]}: string;  name of the NR code
+
+\item {[}'modification-date'{]}: string; date when this .h5 file was last updated, format 'YYYY-MM-DD'.
+
+\item {[}'point-of-contact-email'{]}: string; contact person for questions.
+
+\item {[}'simulation-type'{]}: string; keyword description of the spin configuration. Allowed values are: aligned-spins, non-spinning, precessing.
+
+\item {[}'INSPIRE-bibtex-keys'{]}: string; comma-separated list of INSPIRE bibtex keys that should be cited when this waveform is used (1-3 publications)
+
+\item {[}'license'{]}: string; allowed values are: LVC-internal, public
+
+\item {[}'Lmax'{]}: integer; the maximum $\ell$-value for which modes $h_{\ell m}$ are supplied (all modes with $\ell \leq \mathrm{Lmax}$, $-\ell \leq m \leq +\ell$ have to be provided).
+
+\item {[}'NR-techniques'{]}: string; attempts to summarize major elements of the NR simulation. A comma-separated list of one element in each of the following categories. Note: This list is extensible. If your code doesn't fit the given choices, contact the authors. \\
+Category 1: Puncture-ID, Quasi-Equilibrium-ID \\
+Category 2: BSSN, GH, Z4c \\
+Category 3: RWZ-h,  Psi4-integrated \\
+Category 4: Finite-Radius-Waveform, CCE-Waveform, Extrapolated-Waveform \\
+Category 5: ApproxKillingVector-Spin, CoordinateRotation-Spin \\
+Category 6: Christodoulou-Mass \\
+Example: 'Quasi-Equilibrium-ID, GH, RWZ-h, Extrapolated-Waveform, ApproxKillingVector-Spin, Christodoulou-Mass'
+
+\item{[}'files-in-error-series'{]}: string;  a comma-separated list of .h5 files (including the present one) that combined form an error series for the physical configuration. Set to ' ' if no error-series for this configuration exists.
+
+\item{[}'comparable-simulation'{]}: string; one other .h5 file that (a) has an error-series and (b) is numerically `comparable' to the present one, i.e. an error-analysis can be performed on 'comparable-simulation' is expected to carry over to this waveform. Set to ' ' if an error-series is provided.
+
+\item{[}'production-run'{]}: integer; allowed values are 1 and 0. If 1, this is the highest quality member of the error-series and should be used for analyses.  If 0, this is a lower-quality member of the error-series and should not be used for general analyses.
+
+\item{[}'object1'{]}: string; keyword description to identify the object type. Allowed values are: BH, NS
+
+\item {[}'object2'{]}: string; keyword description to identify the object type. Allowed values are: BH, NS
+
+\item{[}'mass1'{]}: float; mass of the more massive object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar masses $M_\odot$.
+
+\item{[}'mass2'{]}: float; mass of the lighter object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar masses $M_\odot$.
+
+\item{[}'eta'{]}: float; the symmetric mass ratio of the simulation.
+
+\item{[}'f\textunderscore lower\textunderscore at\textunderscore 1MSUN'{]}: float; frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to $1M_\odot$
+
+\item{[}'spin1x'{]}: float; x-component of the dimensionless spin of the heavier object in the NR simulation frame.
+
+\item{[}'spin1y'{]}: float; y-component of the dimensionless spin of the heavier object in the NR simulation frame.
+
+\item{[}'spin1z'{]}: float; z-component of the dimensionless spin of the heavier object in the NR simulation frame.
+
+\item{[}'spin2x'{]}: float; x-component of the dimensionless spin of the lighter object in the NR simulation frame.
+
+\item{[}'spin2y'{]}: float; y-component of the dimensionless spin of the lighter object in the NR simulation frame.
+
+\item{[}'spin2z'{]}: float; z-component of the dimensionless spin of the lighter object in the NR simulation frame.
+
+\item{[}'LNhatx'{]}: float; x-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.
+
+\item{[}'LNhaty'{]}: float; y-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.
+
+\item{[}'LNhatz'{]}: float; z-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.
+
+\item{[}'nhatx'{]}: float; x-component of the orbital separation unit vector in the NR simulation frame.
+
+\item{[}'nhaty'{]}: float; y-component of the orbital separation unit vector in the NR simulation frame.
+
+\item{[}'nhatz'{]}: float; z-component of the orbital separation unit vector in the NR simulation frame.
+
+\item{[}'Omega'{]}: float; orbital frequency. 
+
+\item{[}'eccentricity'{]}: float; estimated eccentricity of the simulation.
+
+\item {[}'mean\textunderscore anomaly'{]}: float; estimated mean anomaly (cf. Eq.~\ref{eq:anomaly}). For $\mathrm{eccentricity} \leq 10^{-3}$, it is allowed to set mean\textunderscore anomaly to 0. If the mean anomaly has not been computed, set mean\textunderscore anomaly to -1.
 \end{itemize}
-To reduce potential ambiguities, we further recommend adding the following  additional metadata:
+%
+If a .h5 file for a hybrid waveform is provided add the following:
 \begin{itemize}
-\item{[}'eccentricity'{]}: eccentricity parameter of the simulation
-\item {[}'mean\textunderscore anomaly'{]}: mean anomaly at the beginning of the waveform (cf. Eq.~\ref{eq:anomaly}).
-\item{[}'PN\textunderscore approximant'{]}: string identifier for the inspiral if hybrid data are stored
+\item{[}'PN\textunderscore approximant'{]}: string; identifier of the inspiral approximant if hybrid data are stored.
 \end{itemize}
+%
+In addition to the H5 groups that store the waveform data, a H5-group for storing auxiliary information is required: 
+\begin{itemize}
+\item{[}'auxiliary-info'{]}: H5-group; this group can contain anything that the submitter finds helpful to identify, document and repeat the run. 
+\end{itemize}
+%
+All of the above attributes and H5-groups are required for file formats 1,2 and 3. Format 2 additionally requires the following H5-groups that contain time series data obtained via romSpline in the same way as the amplitudes and phases (see Sec.~\ref{sec:spline} for details):
+\begin{itemize}
+\item{[}'mass1-vs-time'{]}: romSpline-HDF5-group
 
-As indicated, vectors are represented by their Cartesian components.
-  These components must be specified in a coordinate system (referred
-  to as ``NR frame'') consistent with the one used in the
-decomposition in spherical harmonics (e.g. the polar axis of the
-spherical harmonics must point along the +z-axis).  No requirements
-are placed on the orientation of the NR frame. For instance, {\tt
-  nhat} and {\tt LNhat} need not point along specific coordinate axes.
-Note also that the spin-fields in the metadata
-\texttt{spin\{1,2\}\{x,y,z\}} are given in the NR frame, and
-\emph{not} in the LAL frame.  The rotation of the GW modes into the
-LAL frame is taken care of by the NR injection infrastructure,
-following the conventions described in Sec.~\ref{sec:coordinates}.
+\item{[}'mass2-vs-time'{]}: romSpline-HDF5-group
 
+\item{[}'spin1x-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'spin1y-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'spin1z-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'spin2x-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'spin2y-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'spin2z-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'position1x-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'position1y-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'position1z-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'position2x-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'position2y-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'position2z-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'LNhatx-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'LNhaty-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'LNhatz-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'Omega-vs-time'{]}: romSpline-HDF5-group
+
+\end{itemize}
+%
+Format 3 requires additional H5-groups (obtained via romSpline) that contain time-series data for the remnant black hole: 
+\begin{itemize}
+\item{[}'remnant-mass-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'remnant-spinx-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'remnant-spiny-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'remnant-spinz-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'remnant-positionx-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'remnant-positiony-vs-time'{]}: romSpline-HDF5-group
+
+\item{[}'remnant-positionz-vs-time'{]}: romSpline-HDF5-group
+
+\end{itemize}
 
 
 %%%%%%%%%%%%%%%
