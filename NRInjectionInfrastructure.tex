@@ -236,27 +236,32 @@ Following the LAL waveform convention, the time-coordinate $\tGW$ in the wavefor
 h_\mathrm{peak} := \max \left( \sum_{\ell, m} A_{\ell m}(\tGW)^2 \right).
 \end{equation}
 
-\harald{Note that the time coordinate $\tGW$ in the wave-zone is \emph{not}
-the same time coordinate $t$ which is used below to give information
-about the dynamics of the black holes (e.g. {\tt spin1x-vs-time}).
-There is no unambiguous identification of these time-coordinates,
-since $\tGW$ and $t$ are defined at different regions of the
-space-time (far-zone vs. near-zone).  It is desirable to approximately
-relate these two time-coordinates to each other, e.g. to facilitate
-statements about the dynamical state of the binary at the time ``when
-a certain GW-frequency is reached''.  Therefore, the dynamics time $t$
-should be specified such that same values of $t$ and $t_{\rm GW}$
-correspond approximately to the same state of the evolution.}
+\harald{Note that the time coordinate $\tGW$ in the wave-zone is not
+  identical to time coordinate $t$ used by the numerical
+  relativity simulation in the strong-field regime, the latter is used
+  below to give information about the dynamics of the black holes
+  (e.g. {\tt spin1x-vs-time}).  There is no unambiguous identification
+  of $t_{\rm GW}$ qith $t$, since they are defined in
+  different regions of the space-time (far-zone vs. near-zone).  The
+  normalization of $t_{\rm GW}$ is given by Eq.~(\ref{eq:peak}); we
+  describe on page~\pageref{tGW-vs-tNR} how to choose $t$.}
+ 
 
 %%%%%%%%%%%%%%%
 \subsection{Amplitude and phase spline compression}
 \label{sec:spline}
 %%%%%%%%%%%%%%%
-Gravitational waveforms for LIGO data analysis purposes require uniform sampling in time for a given sampling frequency.
-NR datasets, however, are commonly not uniformly sampled and if they are, the sampling interval $\Delta \tGW$ may not necessarily
-correspond to the one required by data analysis tools. 
-It is therefore unavoidable to interpolate the NR data to the desired sampling rate. Whilst the NR data could simply be interpolated as
-they are, we choose to reduce the data by performing one-dimensional spline compression on the NR data~\cite{Galley:2016mvy}. This is a particular advantage for long simulations or hybrid data, but also significantly reduces the storage and I/O for pure NR data. 
+Gravitational waveforms for LIGO data analysis purposes require
+uniform sampling in time for a given sampling frequency.  NR datasets,
+however, are commonly not uniformly sampled and if they are, the
+sampling interval $\Delta \tGW$ may not necessarily correspond to the
+one required by data analysis tools.  It is therefore unavoidable to
+interpolate the NR data to the desired sampling rate. Whilst the NR
+data could simply be interpolated as they are, we choose to reduce the
+data by performing one-dimensional spline compression on the NR
+data~\cite{Galley:2016mvy}. This is a particular advantage for long
+simulations or hybrid data, but also significantly reduces the storage
+and I/O for pure NR data.
 
 The one-dimensional spline compression is performed separately for each {\bf mode amplitude} $A_{\ell m}(\tGW)$ and {\bf phase} $\Phi_{\ell m}(\tGW)$, which are
 already time-shifted such that $\tGW=0$ corresponds to the peak of the waveform. 
@@ -317,15 +322,17 @@ Required time-dependent metadata (see list below) have to contain the values cor
 
 Vectors must be represented by their Cartesian components in the NR frame (see Sec.~\ref{sec:NRconv}). This coordinate system is consistent with the one used in the decomposition in spherical harmonics (e.g. the polar axis of the spherical harmonics must point along the +z-axis). No requirements are placed on the orientation of the NR frame. For instance, the orbital unit separation vector 'nhat' and the Newtonian unit orbital angular momentum 'LNhat' need not point along specific coordinate axes. Note also that the spin-fields in the metadata 'spin\{1,2\}\{x,y,z\}' are given in the NR frame, and \emph{not} in the LAL frame. The rotation of the GW modes into the LAL frame is taken care of by the NR injection infrastructure, following the conventions described in Sec.~\ref{sec:coordinates}. 
 
-Note: The time-coordinate of spins, positions, masses and their
+\harald{Note: The time-coordinate of spins, positions, masses and their
 respective time-series will be associated with the apparent horizon,
-e.g. the NR coordinate time $t_\mathrm{NR}$. Such a time cannot
+e.g. the NR coordinate time $t$. Such a time cannot
 unambiguously be identified with the retarded time $\tGW$ of the
-waveform modes. However, the submitter is asked to make a reasonable
-effort to have the same numerical values of $t_\mathrm{NR}$ and $\tGW$
-to correspond to the same portion of the waveform, e.g. through
-choosing $\tGW = t_\mathrm{NR} - R^*_\mathrm{extraction}$, where
-$R^*_\mathrm{extraction}$ is the tortoise radius of the extraction sphere~\cite{Fiske:2005fx,Boyle:2009vi}.  \\
+waveform modes.
+\label{tGW-vs-tNR}
+However, the submitter is asked to make a {\bf reasonable
+effort to have the same numerical values of $t$ and $\tGW$
+to correspond to the same portion of the waveform}, e.g. through
+choosing $\tGW = t - R^*_\mathrm{extraction}$, where
+$R^*_\mathrm{extraction}$ is the tortoise radius of the extraction sphere~\cite{Fiske:2005fx,Boyle:2009vi}.}  \\
 \newline
 %Three versions of .h5 files, specified by the attribute `Format', are compatible. All of them require the following metadata stored as attributes of the .h5 file: \\
 
@@ -1459,7 +1466,7 @@ The current implementation still suffers from a few caveats and drawbacks. As op
 %%%%%%%%%%%%%%%%%%%%%%%%%Acknowledgements%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
 We are grateful to Mark Hannam for many useful discussions and comments throughout the code review.
-We also thank Kent Blackburn and James Healy for providing useful comments on the manuscript, and Geoffrey Lovelace and Deirdre Shoemaker for input into the metadata discussion.
+We also thank Kent Blackburn and James Healy for providing useful comments on the manuscript, and \harald{Ian Hinder}, Geoffrey Lovelace and Deirdre Shoemaker for input into the metadata discussion.
 Many thanks for discussions regarding the frame coordinate transformations to Stas Babak, Jolien Creighton, Michael P\"urrer and Riccardo Sturani.
 %%%%%%%%%%%%%%%%%%%%%%%%%Appendices%%%%%%%%%%%%%%%%%%%%%%%%
 
