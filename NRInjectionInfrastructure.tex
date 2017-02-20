@@ -24,6 +24,9 @@
 \usepackage[normalem]{ulem} 
 \usepackage{alltt}
 \usepackage[colorlinks]{hyperref}
+\usepackage{longtable}
+\usepackage{enumitem}
+\setlist{nosep}
 
 %%%%%Some new commands%%%%%%%%%%%%%%%%%
 % Macros for text changes
@@ -38,6 +41,12 @@
 \newcommand{\Radboud}{Department of Astrophysics/IMAPP, Radboud University Nijmegen, P.O. Box 9010, 6525 GL Nijmegen, The Netherlands }
 \newcommand{\CITA}{Canadian Institute for Theoretical Astrophysics, 60 St.~George Street, University of Toronto, Toronto, ON M5S 3H8, Canada}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% longtable before and after spacing
+% http://tex.stackexchange.com/questions/5683/how-to-remove-top-and-bottom-whitespace-of-longtable
+\setlength{\LTpre}{1ex}
+\setlength{\LTpost}{1ex}
+
 
 % SCIENCE MACROS
 \newcommand{\ExNR}{\hat e_x}
@@ -164,13 +173,34 @@ of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we d
 \section{Waveform format}
 \label{sec:format}
 %%%%%%%%%%%%%%%
+
+
+\harald{All data for one NR simulation is provided in one hdf5-file.
+  This file contains
+  \begin{itemize}
+    \item The gravitational waveforms given as spherical-harmonic
+      modes in a spline-compressed format.
+    \item Metadata describing the simulation, and identifying the
+      origin of the simulation.
+      \item Optionally, additional information about the dynamics of
+        the black holes.
+  \end{itemize}
+When multiple sets of waveform-modes are to be provided for the
+identical phsysical configuration (e.g. during a convergence test, or
+for different choices during GW extraction), then each set of
+waveform-modes needs to be stored in a separate .h5 file.}
+
+
+
 %%%%%%%%%%%%%%%%
 \subsection{NR conventions}
 \label{sec:NRconv}
 %%%%%%%%%%%%%%%%
-In Numerical Relativity one solves for the complete space-time of the binary system. For GW data analysis
-purposes one requires the gravitational-wave strain $h$ far from the source. The relevant numerical quantity
-is the metric perturbation $h_{ij}$ as computed in the transverse-traceless (TT) gauge. 
+In Numerical Relativity one solves for the complete space-time of the
+binary system. For GW data analysis purposes one requires the
+gravitational-wave strain $h$ far from the source. The relevant
+numerical quantity is the metric perturbation $h_{ij}$ as computed in
+the transverse-traceless (TT) gauge.
 
 There are different ways of computing the metric perturbation from a numerical evolution. The most common methods include the use of the complex Weyl scalar $\Psi_4$~\cite{Newman:1961qr, Penrose:1962ij}, which is related to the metric perturbation via two time derivatives, or the Regge-Wheeler-Zerilli formalism~\cite{Regge:1957td, Zerilli:1970se, Zerilli:1971wd, Moncrief:1974am}, which computes the metric perturbation in the wave-zone as a perturbation of the Schwarzschild spacetime. 
 
@@ -182,14 +212,16 @@ h = h_+ - i h_\times \in \mathbb{C},
 \end{equation}
 where $h_+, h_\times \in \mathbb{R}$. 
 
-Let $( \ExNR, \EyNR, \EzNR)$ be a Cartesian coordinate system in the \emph{wave-zone}, i.e. the zone far away from the binary where the GWs are extracted, and $\tGW$ the corresponding far-zone time coordinate. This Cartesian coordinate system is related to the polar coordinates $(r, \theta, \phi)$ by the standard means. In this coordinate system, henceforth referred to as the NR frame, the metric perturbation is commonly decomposed into \emph{modes}
+Let $( \ExNR, \EyNR, \EzNR)$ be a Cartesian coordinate system in the \emph{wave-zone}, i.e. the zone far away from the binary where the GWs are extracted\harald{\sout{, and $\tGW$ the corresponding far-zone time coordinate}}. This Cartesian coordinate system is related to the polar coordinates $(r, \theta, \phi)$ by the standard transformation. In this coordinate system, henceforth referred to as the NR frame, the metric perturbation is commonly decomposed into \emph{modes}
 in a basis of spin-weighted spherical harmonics, ${}^{-2}Y_{\ell m}$, of spin weight $s=-2$, where the GW propagation direction is the radial unit vector $\hat{r}$.
-For any point $(\theta, \phi)$ on the unit sphere, the GW strain can then be shown to take the following form:
+For any point $(\theta, \phi)$ on the unit sphere, the GW strain takes the form
 \begin{equation}
 \label{ }
 h^\mathrm{NR}(\tGW; \theta, \phi) = h^\mathrm{NR}_+ - i h^\mathrm{NR}_\times = \sum_{\ell=2}^\infty \sum_{m=-\ell}^{\ell} H_{\ell m}(\tGW) {}^{-2}Y_{\ell m}(\theta,\phi),
 \end{equation}
 where $H_{\ell m}(\tGW)$ denotes the extracted NR gravitational-wave modes.
+\harald{The modes are given in terms of a retarded time-coordinate
+  $t_{\rm GW}$}.
 As for any wave, we can also write each mode $H_{\ell m}(\tGW)$ as an amplitude $A_{\ell m}(\tGW)$ and a phase
 $\Phi_{\ell m}(\tGW)$,
 \begin{equation}
@@ -198,14 +230,24 @@ H_{\ell m}(\tGW) = A_{\ell m}(\tGW)e^{i\Phi_{\ell m}(\tGW)}.
 \end{equation}
 The mode amplitude $A_{\ell m}(t)$ is defined as the complex norm of the complex time series $H_{\ell m}(\tGW)$, the phase $\Phi_{\ell m}(\tGW)$ is the unwrapped argument of the complex time series $H_{\ell m}(\tGW)$. For a binary that is orbiting counter-clockwise in the xy-plane of the NR frame (i.e., the orbital angular frequency vector is \emph{parallel} to the z-axis), $\Phi_{2,2}(\tGW)$ is a monotonically {\bf decreasing} function.
 
-Following the LAL waveform convention, the time-coordinate $\tGW$ in the waveform modes has to be chosen such that the peak of the waveform occurs at $t_\mathrm{GW,peak} \equiv 0$, where the ``peak'' of the waveform is defined by 
+Following the LAL waveform convention, the time-coordinate $\tGW$ in the waveform modes has to be chosen such that the peak of the waveform occurs at $t_\mathrm{GW,peak} \equiv 0$, where the ``peak'' of the waveform is defined by
 \begin{equation}
 \label{eq:peak}
 h_\mathrm{peak} := \max \left( \sum_{\ell, m} A_{\ell m}(\tGW)^2 \right).
 \end{equation}
 
-Note that the time coordinate $\tGW$ in the wave-zone is \emph{not} the same time coordinate that tracks the dynamics of the black holes in the near-zone. 
-\patricia{Move text about time from frame section to here.}
+\harald{Note that the time coordinate $\tGW$ in the wave-zone is \emph{not}
+the same time coordinate $t$ which is used below to give information
+about the dynamics of the black holes (e.g. {\tt spin1x-vs-time}).
+There is no unambiguous identification of these time-coordinates,
+since $\tGW$ and $t$ are defined at different regions of the
+space-time (far-zone vs. near-zone).  It is desirable to approximately
+relate these two time-coordinates to each other, e.g. to facilitate
+statements about the dynamical state of the binary at the time ``when
+a certain GW-frequency is reached''.  Therefore, the dynamics time $t$
+should be specified such that same values of $t$ and $t_{\rm GW}$
+correspond approximately to the same state of the evolution.}
+
 %%%%%%%%%%%%%%%
 \subsection{Amplitude and phase spline compression}
 \label{sec:spline}
@@ -229,19 +271,26 @@ import romSpline
 spline = romSpline.ReducedOrderSpline(\(t\), \(A\sb{\ell,m}(\tGW) or \Phi\sb{\ell,m}(\tGW)\), verbose=False)
 spline.write('filename.h5')
 \end{alltt}
-The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series data and is composed of five datasets: (deg, tol, X, Y, errors). \\
-Note: The latest version of \verb"romSpline" also allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file.
+The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series data and is composed of five datasets: (deg, tol, X, Y, errors)\footnote{\harald{The latest version of {\tt romSpline} allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file.}}.
 
-Once all spline interpolants for a single NR simulations have been obtained, they have to be stored as individual H5-groups in the \emph{final HDF5 output file} with the following \emph{mandatory} group naming conventions: 
-\begin{itemize}
-  \item Amplitude H5-group: \textbf{amp\textunderscore l\#1\textunderscore m\#2}
-  \item Phase H5-group: \textbf{phase\textunderscore  l\#1\textunderscore m\#2},
-\end{itemize}
-where (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the group naming convention is phase\textunderscore l2\textunderscore m-2 and 
+Once all spline interpolants for a single NR simulations have been obtained, they have to be stored as individual H5-groups in the \emph{final HDF5 output file} with the following \emph{mandatory} group naming conventions:\\
+
+\begin{tabular}{|p{2.5cm}|p{3.7cm}|p{8cm}|}
+  \hline 
+\textbf{amp\textunderscore l\#1\textunderscore m\#2} & romspline-HDF5-group & amplitude $A_{\ell m}(t_{\rm GW})$ \\
+\textbf{phase\textunderscore  l\#1\textunderscore m\#2} & romspline-HDF5-group  & phase $\Phi_{\ell m}(t_{\rm GW})$
+\\ \hline 
+\end{tabular}
+$ $\\ \\
+
+Here (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the group naming convention is phase\textunderscore l2\textunderscore m-2 and 
 amp\textunderscore l2\textunderscore m-2. 
-\patricia{Is it clear that there is one .h5 file per NR simulation?}
+\patricia{\sout{Is it clear that there is one .h5 file per NR simulation?}} \red{[HP added extra text to start of Sec. II]}
 
-In addition to the amplitude and phase groups, we highly recommend to also store the NR waveform times $\tGW$, i.e., the one-dimensional data array containing the original time-steps of the NR data, as a H5-dataset in the final HDF5 file. 
+In addition to the amplitude and phase groups, we highly recommend to
+also store the NR waveform times $\tGW$, i.e., the one-dimensional
+data array containing the original time-steps of the NR data, as a
+H5-dataset in the final HDF5 file.  \red{[HP: Patricia, specify format and group-name for the $t_{\rm GW}$ dataset.]}
 
 %%%%%%%%%%%%%%%
 \subsection{Metadata and additional HDF5 groups}
@@ -253,99 +302,216 @@ Required time-dependent metadata (see list below) have to contain the values cor
 
 Vectors must be represented by their Cartesian components in the NR frame (see Sec.~\ref{sec:NRconv}). This ccoordinate system is consistent with the one used in the decomposition in spherical harmonics (e.g. the polar axis of the spherical harmonics must point along the +z-axis). No requirements are placed on the orientation of the NR frame. For instance, the orbital unit separation vector 'nhat' and the Newtonian unit orbital angular momentum 'LNhat' need not point along specific coordinate axes. Note also that the spin-fields in the metadata 'spin\{1,2\}\{x,y,z\}' are given in the NR frame, and \emph{not} in the LAL frame. The rotation of the GW modes into the LAL frame is taken care of by the NR injection infrastructure, following the conventions described in Sec.~\ref{sec:coordinates}. 
 
-Note: The time-coordinate of spins, positions, masses and their respective time-series will be associated with the apparent horizon, e.g. the NR coordinate time $t_\mathrm{NR}$. Such a time cannot unambiguously be identified with the retarded time $\tGW$ of the waveform modes. However, the submitter is asked to make a reasonable effort to have the same numerical values of $t_\mathrm{NR}$ and $\tGW$ to correspond to the same portion of the waveform, e.g. through choosing $\tGW = t_\mathrm{NR} - R_\mathrm{extraction}$, where $R_\mathrm{extraction}$ is a finite extraction radius.
+Note: The time-coordinate of spins, positions, masses and their respective time-series will be associated with the apparent horizon, e.g. the NR coordinate time $t_\mathrm{NR}$. Such a time cannot unambiguously be identified w1
+ith the retarded time $\tGW$ of the waveform modes. However, the submitter is asked to make a reasonable effort to have the same numerical values of $t_\mathrm{NR}$ and $\tGW$ to correspond to the same portion of the waveform, e.g. through choosing $\tGW = t_\mathrm{NR} - R_\mathrm{extraction}$, where $R_\mathrm{extraction}$ is a finite extraction radius.
 \\
 \newline
-Three versions of .h5 files, specified by the attribute `Format', are compatible. All of them require the following metadata stored as attributes of the .h5 file: 
+Three versions of .h5 files, specified by the attribute `Format', are compatible. All of them require the following metadata stored as attributes of the .h5 file: \\
 
-\begin{itemize}
-\item{[}'Format'{]}: integer; indicates what data are supplied. Must be 1, 2, 3.
+\noindent
 
-\item{[}'type'{]}: string; keyword description of the simulation as requested by the LIGO Open Science Center (LOSC). Required value: NRinjection.
+\renewcommand*{\arraystretch}{1.3} % extra spacing between entries
+\begin{longtable}{|p{3.4cm}|p{1.6cm}|p{11.2cm}|}
+  \hline  \emph{attribute-name} & \emph{type} & \emph{description} \\ \hline
+  \endhead
+  \hline  \emph{attribute-name} & \emph{type} & \emph{description} \\ \hline
+\endfirsthead
+\hline 
+ \multicolumn{3}{r}{\emph{continued}}
+\endfoot
+\hline
+\endlastfoot
+  \textbf{Format} & integer & indicates what data are supplied. Must be 1, 2, 3.\\
+  \textbf{type} & string & keyword description of the simulation as requested by the LIGO Open Science Center (LOSC). Required value: NRinjection.\\
+  \textbf{name} & string  & short identifier of the simulation, e.g., SXS:BBH:0019\\
 
-\item{[}'name'{]}: string; short identifier of the simulation, e.g., SXS:BBH:0019
 
-\item{[}'alternative-names'{]}: string; comma-separated list of user-specifiable alternative names. These names can be longer, more descriptive, and/or include what specific series of simulations this configuration belongs to.
+\textbf{alternative-names} & string & comma-separated list of user-specifiable alternative names. These names can be longer, more descriptive, and/or include what specific series of simulations this configuration belongs to.\\
 
-\item {[}'NR-group'{]}: string;  name of the NR group that carried out the simulation.
+\textbf{NR-group} & string &  name of the NR group that carried out the simulation.\\
 
-\item {[}'NR-code'{]}: string;  name of the NR code that was used to carry out the simulation.
+\textbf{NR-code} & string &  name of the NR code that was used to carry out the simulation.\\
 
-\item {[}'modification-date'{]}: string; date when this .h5 file was last updated. Format 'YYYY-MM-DD'.
+\textbf{modification-date} & string & date when this .h5 file was last updated. Format 'YYYY-MM-DD'.\\
 
-\item {[}'point-of-contact-email'{]}: string; contact person for questions.
+\textbf{point-of-contact-email} & string & contact person for questions.\\
 
-\item {[}'simulation-type'{]}: string; keyword description of the spin configuration. Allowed values are: aligned-spins, non-spinning, precessing.
+\textbf{simulation-type} & string & keyword description of the spin configuration. Allowed values are: aligned-spins, non-spinning, precessing.\\
 
-\item {[}'INSPIRE-bibtex-keys'{]}: string; comma-separated list of INSPIRE bibtex keys that should be cited when this waveform is used (1-3 publications).
+\textbf{INSPIRE-bibtex-keys} & string & comma-separated list of INSPIRE bibtex keys that should be cited when this waveform is used (1-3 publications).\\
 
-\item {[}'license'{]}: string; allowed values are: LVC-internal, public.
+\textbf{license} & string & allowed values are: LVC-internal, public.\\
 
-\item {[}'Lmax'{]}: integer; the maximum $\ell$-value for which  $h_{\ell m}$-modes are supplied (all modes with $\ell \leq \mathrm{Lmax}$, $-\ell \leq m \leq +\ell$ have to be provided).
+\textbf{Lmax} & integer & the maximum $\ell$-value for which  $h_{\ell m}$-modes are supplied (all modes with $\ell \leq \mathrm{Lmax}$, $-\ell \leq m \leq +\ell$ have to be provided).\\
 
-\item {[}'NR-techniques'{]}: string; attempts to summarize major elements of the NR simulation. A comma-separated list of one element in each of the following categories. Note: This list is extensible. If your code does not fit the given choices, contact the authors. \\
+\textbf{NR-techniques} & string & attempts to summarize major elements of the NR simulation. A comma-separated list of one element in each of the following categories. \\
+  & & \parbox{11.2cm}{
 Category 1: Puncture-ID, Quasi-Equilibrium-ID \\
 Category 2: BSSN, GH, Z4c \\
 Category 3: RWZ-h,  Psi4-integrated \\
 Category 4: Finite-Radius-Waveform, CCE-Waveform, Extrapolated-Waveform \\
 Category 5: ApproxKillingVector-Spin, CoordinateRotation-Spin \\
 Category 6: Christodoulou-Mass \\
-Example: 'Quasi-Equilibrium-ID, GH, RWZ-h, Extrapolated-Waveform, ApproxKillingVector-Spin, Christodoulou-Mass'
+Example: 'Quasi-Equilibrium-ID, GH, RWZ-h, Extrapolated-Waveform, ApproxKillingVector-Spin, Christodoulou-Mass'\\
+\emph{(Note: This list is extensible. If your code does not fit the given choices, contact the authors.)}
+}\\
+\textbf{files-in-error-series} & string &  a comma-separated list of .h5 files (including the present one) that combined form an error series for the binary configuration, e.g. different numerical resolutions. Set to ' ' if no error-series for this configuration exists.\\
 
-\item{[}'files-in-error-series'{]}: string;  a comma-separated list of .h5 files (including the present one) that combined form an error series for the binary configuration, e.g. different numerical resolutions. Set to ' ' if no error-series for this configuration exists.
+\textbf{\footnotesize comparable-simulation} & string & one other .h5 file that (a) has an error-series and (b) is numerically ``comparable'' to the present one, i.e. an error-analysis that is performed on 'comparable-simulation' is expected to carry over to this waveform. Set to ' ' if an error-series is provided.\\
 
-\item{[}'comparable-simulation'{]}: string; one other .h5 file that (a) has an error-series and (b) is numerically ``comparable'' to the present one, i.e. an error-analysis that is performed on 'comparable-simulation' is expected to carry over to this waveform. Set to ' ' if an error-series is provided.
+\textbf{production-run} & integer & allowed values are 1 and 0. If 1, this is the highest quality member of the error-series and should be used for analyses.  If 0, this is a lower-quality member of the error-series and should not be used for general analyses.\\
 
-\item{[}'production-run'{]}: integer; allowed values are 1 and 0. If 1, this is the highest quality member of the error-series and should be used for analyses.  If 0, this is a lower-quality member of the error-series and should not be used for general analyses.
+\textbf{object1} & string & keyword description to identify the object type. Allowed values are: BH, NS\\
 
-\item{[}'object1'{]}: string; keyword description to identify the object type. Allowed values are: BH, NS
+\textbf{object2} & string & keyword description to identify the object type. Allowed values are: BH, NS\\
 
-\item {[}'object2'{]}: string; keyword description to identify the object type. Allowed values are: BH, NS
+\textbf{mass1} & float & mass of the more massive object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.\\
 
-\item{[}'mass1'{]}: float; mass of the more massive object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.
+\textbf{mass2} & float & mass of the lighter object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.\\
 
-\item{[}'mass2'{]}: float; mass of the lighter object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.
+\textbf{eta} & float & the symmetric mass ratio of the simulation.\\
 
-\item{[}'eta'{]}: float; the symmetric mass ratio of the simulation.
+\textbf{f\textunderscore lower\textunderscore at\textunderscore 1MSUN} & float & frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to $1M_\odot$\\
 
-\item{[}'f\textunderscore lower\textunderscore at\textunderscore 1MSUN'{]}: float; frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to $1M_\odot$
+\textbf{spin1x} & float & x-component of the dimensionless spin of the heavier object in the NR simulation frame.\\
 
-\item{[}'spin1x'{]}: float; x-component of the dimensionless spin of the heavier object in the NR simulation frame.
+\textbf{spin1y} & float & y-component of the dimensionless spin of the heavier object in the NR simulation frame.\\
 
-\item{[}'spin1y'{]}: float; y-component of the dimensionless spin of the heavier object in the NR simulation frame.
+\textbf{spin1z} & float & z-component of the dimensionless spin of the heavier object in the NR simulation frame.\\
 
-\item{[}'spin1z'{]}: float; z-component of the dimensionless spin of the heavier object in the NR simulation frame.
+\textbf{spin2x} & float & x-component of the dimensionless spin of the lighter object in the NR simulation frame.\\
 
-\item{[}'spin2x'{]}: float; x-component of the dimensionless spin of the lighter object in the NR simulation frame.
+\textbf{spin2y} & float & y-component of the dimensionless spin of the lighter object in the NR simulation frame.\\
 
-\item{[}'spin2y'{]}: float; y-component of the dimensionless spin of the lighter object in the NR simulation frame.
+\textbf{spin2z} & float & z-component of the dimensionless spin of the lighter object in the NR simulation frame.\\
 
-\item{[}'spin2z'{]}: float; z-component of the dimensionless spin of the lighter object in the NR simulation frame.
+\textbf{LNhatx} & float & x-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.\\
 
-\item{[}'LNhatx'{]}: float; x-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.
+\textbf{LNhaty} & float & y-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.\\
 
-\item{[}'LNhaty'{]}: float; y-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.
+\textbf{LNhatz} & float & z-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.\\
 
-\item{[}'LNhatz'{]}: float; z-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.
+\textbf{nhatx} & float & x-component of the orbital separation unit vector in the NR simulation frame defined as the unit vector pointing from the lighter (mass2) to the heavier (mass1) object.\\
 
-\item{[}'nhatx'{]}: float; x-component of the orbital separation unit vector in the NR simulation frame defined as the unit vector pointing from the lighter (mass2) to the heavier (mass1) object.
+\textbf{nhaty} & float & y-component of the orbital separation unit vector in the NR simulation frame.\\
 
-\item{[}'nhaty'{]}: float; y-component of the orbital separation unit vector in the NR simulation frame.
+\textbf{nhatz} & float & z-component of the orbital separation unit vector in the NR simulation frame.\\
 
-\item{[}'nhatz'{]}: float; z-component of the orbital separation unit vector in the NR simulation frame.
+\textbf{Omega} & float & orbital frequency. \\
 
-\item{[}'Omega'{]}: float; orbital frequency. 
+\textbf{eccentricity} & float & estimated eccentricity of the simulation.\\
 
-\item{[}'eccentricity'{]}: float; estimated eccentricity of the simulation.
+\textbf{mean\textunderscore anomaly} & float & estimated mean anomaly (cf. Eq.~\ref{eq:anomaly}). For $\mathrm{eccentricity} \leq 10^{-3}$, it is allowed to set mean\textunderscore anomaly to 0. If the mean anomaly has not been computed, set mean\textunderscore anomaly to -1.\\
+\textbf{PN\textunderscore approximant} & string & \emph{Only present for PN-NR hyrbid waveforms}: identifier of the inspiral approximant 
+\end{longtable}
 
-\item {[}'mean\textunderscore anomaly'{]}: float; estimated mean anomaly (cf. Eq.~\ref{eq:anomaly}). For $\mathrm{eccentricity} \leq 10^{-3}$, it is allowed to set mean\textunderscore anomaly to 0. If the mean anomaly has not been computed, set mean\textunderscore anomaly to -1.
-\end{itemize}
+
+%% \begin{itemize}
+%% \item{[}'Format'{]}: integer; indicates what data are supplied. Must be 1, 2, 3.
+
+%% \item{[}'type'{]}: string; keyword description of the simulation as requested by the LIGO Open Science Center (LOSC). Required value: NRinjection.
+
+%% \item{[}'name'{]}: string; short identifier of the simulation, e.g., SXS:BBH:0019
+
+%% \item{[}'alternative-names'{]}: string; comma-separated list of user-specifiable alternative names. These names can be longer, more descriptive, and/or include what specific series of simulations this configuration belongs to.
+
+%% \item {[}'NR-group'{]}: string;  name of the NR group that carried out the simulation.
+
+%% \item {[}'NR-code'{]}: string;  name of the NR code that was used to carry out the simulation.
+
+%% \item {[}'modification-date'{]}: string; date when this .h5 file was last updated. Format 'YYYY-MM-DD'.
+
+%% \item {[}'point-of-contact-email'{]}: string; contact person for questions.
+
+%% \item {[}'simulation-type'{]}: string; keyword description of the spin configuration. Allowed values are: aligned-spins, non-spinning, precessing.
+
+%% \item {[}'INSPIRE-bibtex-keys'{]}: string; comma-separated list of INSPIRE bibtex keys that should be cited when this waveform is used (1-3 publications).
+
+%% \item {[}'license'{]}: string; allowed values are: LVC-internal, public.
+
+%% \item {[}'Lmax'{]}: integer; the maximum $\ell$-value for which  $h_{\ell m}$-modes are supplied (all modes with $\ell \leq \mathrm{Lmax}$, $-\ell \leq m \leq +\ell$ have to be provided).
+
+%% \item {[}'NR-techniques'{]}: string; attempts to summarize major elements of the NR simulation. A comma-separated list of one element in each of the following categories. Note: This list is extensible. If your code does not fit the given choices, contact the authors. \\
+%% Category 1: Puncture-ID, Quasi-Equilibrium-ID \\
+%% Category 2: BSSN, GH, Z4c \\
+%% Category 3: RWZ-h,  Psi4-integrated \\
+%% Category 4: Finite-Radius-Waveform, CCE-Waveform, Extrapolated-Waveform \\
+%% Category 5: ApproxKillingVector-Spin, CoordinateRotation-Spin \\
+%% Category 6: Christodoulou-Mass \\
+%% Example: 'Quasi-Equilibrium-ID, GH, RWZ-h, Extrapolated-Waveform, ApproxKillingVector-Spin, Christodoulou-Mass'
+
+%% \item{[}'files-in-error-series'{]}: string;  a comma-separated list of .h5 files (including the present one) that combined form an error series for the binary configuration, e.g. different numerical resolutions. Set to ' ' if no error-series for this configuration exists.
+
+%% \item{[}'comparable-simulation'{]}: string; one other .h5 file that (a) has an error-series and (b) is numerically ``comparable'' to the present one, i.e. an error-analysis that is performed on 'comparable-simulation' is expected to carry over to this waveform. Set to ' ' if an error-series is provided.
+
+%% \item{[}'production-run'{]}: integer; allowed values are 1 and 0. If 1, this is the highest quality member of the error-series and should be used for analyses.  If 0, this is a lower-quality member of the error-series and should not be used for general analyses.
+
+%% \item{[}'object1'{]}: string; keyword description to identify the object type. Allowed values are: BH, NS
+
+%% \item {[}'object2'{]}: string; keyword description to identify the object type. Allowed values are: BH, NS
+
+%% \item{[}'mass1'{]}: float; mass of the more massive object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.
+
+%% \item{[}'mass2'{]}: float; mass of the lighter object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.
+
+%% \item{[}'eta'{]}: float; the symmetric mass ratio of the simulation.
+
+%% \item{[}'f\textunderscore lower\textunderscore at\textunderscore 1MSUN'{]}: float; frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to $1M_\odot$
+
+%% \item{[}'spin1x'{]}: float; x-component of the dimensionless spin of the heavier object in the NR simulation frame.
+
+%% \item{[}'spin1y'{]}: float; y-component of the dimensionless spin of the heavier object in the NR simulation frame.
+
+%% \item{[}'spin1z'{]}: float; z-component of the dimensionless spin of the heavier object in the NR simulation frame.
+
+%% \item{[}'spin2x'{]}: float; x-component of the dimensionless spin of the lighter object in the NR simulation frame.
+
+%% \item{[}'spin2y'{]}: float; y-component of the dimensionless spin of the lighter object in the NR simulation frame.
+
+%% \item{[}'spin2z'{]}: float; z-component of the dimensionless spin of the lighter object in the NR simulation frame.
+
+%% \item{[}'LNhatx'{]}: float; x-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.
+
+%% \item{[}'LNhaty'{]}: float; y-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.
+
+%% \item{[}'LNhatz'{]}: float; z-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.
+
+%% \item{[}'nhatx'{]}: float; x-component of the orbital separation unit vector in the NR simulation frame defined as the unit vector pointing from the lighter (mass2) to the heavier (mass1) object.
+
+%% \item{[}'nhaty'{]}: float; y-component of the orbital separation unit vector in the NR simulation frame.
+
+%% \item{[}'nhatz'{]}: float; z-component of the orbital separation unit vector in the NR simulation frame.
+
+%% \item{[}'Omega'{]}: float; orbital frequency. 
+
+%% \item{[}'eccentricity'{]}: float; estimated eccentricity of the simulation.
+
+%% \item {[}'mean\textunderscore anomaly'{]}: float; estimated mean anomaly (cf. Eq.~\ref{eq:anomaly}). For $\mathrm{eccentricity} \leq 10^{-3}$, it is allowed to set mean\textunderscore anomaly to 0. If the mean anomaly has not been computed, set mean\textunderscore anomaly to -1.
+%% \end{itemize}
 %
-If a .h5 file for a hybrid waveform is provided add the following:
-\begin{itemize}
-\item{[}'PN\textunderscore approximant'{]}: string; identifier of the inspiral approximant if hybrid data are stored.
-\end{itemize}
+%% If a .h5 file for a hybrid waveform is provided add the following:
+%% \begin{itemize}
+%% \item{[}'PN\textunderscore approximant'{]}: string; identifier of the inspiral approximant if hybrid data are stored.
+%% \end{itemize}
 %
+
+
+\renewcommand*{\arraystretch}{1.3} % extra spacing between entries
+\begin{longtable}{|p{3.4cm}|p{1.6cm}|p{11.2cm}|}
+  \hline  \emph{group-name} & \emph{type} & \emph{description} \\ \hline
+  \endhead
+  \hline  \emph{attribute-name} & \emph{type} & \emph{description} \\ \hline
+\endfirsthead
+\hline 
+ \multicolumn{3}{r}{\emph{continued}}
+\endfoot
+\hline
+\endlastfoot
+
+
+
+
+
 In addition to the H5 groups that store the waveform data (amplitudes and phases), a H5-group for storing auxiliary information is required: 
 \begin{itemize}
 \item{[}'auxiliary-info'{]}: H5-group; this group can contain anything that the submitter finds helpful to identify, document and repeat the run. 
@@ -717,7 +883,7 @@ One can further define an orbital frequency
   \vec\Omega_\mathrm{orb}(t) = \nNR(t) \times \frac{d\nNR(t)}{dt}.
 \end{equation}
 
-Equations~(\ref{eq:chi})--(\ref{eq:Omega}) are defined in the
+\harald{Equations~(\ref{eq:chi})--(\ref{eq:Omega}) are defined in the
 strong-field region near the black holes, and are given as a function
 of the time-coordinate $t$ employed by the NR simulation in the strong
 field regime.
@@ -727,7 +893,7 @@ to relate these two time-coordinates to each other, e.g. to make a
 statement about the dynamical state of the binary at the time ``when a
 certain GW-frequency is reached''.  Any relation between $\tGW$ and
 $t$ is ambiguous.  Often NR simulations employ an approximation of
-``retarded time'', i.e.
+``retarded time'', i.e.}
 \begin{equation}
   \label{eq:tretarted}
   \tGW = t\big|_{\rm retarted}.
