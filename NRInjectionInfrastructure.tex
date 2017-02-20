@@ -207,7 +207,7 @@ There are different ways of computing the metric perturbation from a numerical e
 In the TT gauge, the metric perturbation
 has two independent real polarisations, $h_+$ and $h_\times$, which can be written as the complex strain
 \begin{equation}
-\label{ }
+\label{wq:Hlm}
 h = h_+ - i h_\times \in \mathbb{C},
 \end{equation}
 where $h_+, h_\times \in \mathbb{R}$. 
@@ -273,40 +273,61 @@ spline.write('filename.h5')
 \end{alltt}
 The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series data and is composed of five datasets: (deg, tol, X, Y, errors)\footnote{\harald{The latest version of {\tt romSpline} allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file.}}.
 
-Once all spline interpolants for a single NR simulations have been obtained, they have to be stored as individual H5-groups in the \emph{final HDF5 output file} with the following \emph{mandatory} group naming conventions:\\
+The spline interpolants for each $(\ell,m)$ mode for a single NR
+simulations are stored stored as individual H5-groups in the
+\emph{final HDF5 output file} under the group-names given below in Sec.~\ref{sec:format:groups}.
 
-\begin{tabular}{|p{2.5cm}|p{3.7cm}|p{8cm}|}
-  \hline 
-\textbf{amp\textunderscore l\#1\textunderscore m\#2} & romspline-HDF5-group & amplitude $A_{\ell m}(t_{\rm GW})$ \\
-\textbf{phase\textunderscore  l\#1\textunderscore m\#2} & romspline-HDF5-group  & phase $\Phi_{\ell m}(t_{\rm GW})$
-\\ \hline 
-\end{tabular}
-$ $\\ \\
 
-Here (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the group naming convention is phase\textunderscore l2\textunderscore m-2 and 
-amp\textunderscore l2\textunderscore m-2. 
-\patricia{\sout{Is it clear that there is one .h5 file per NR simulation?}} \red{[HP added extra text to start of Sec. II]}
+%% with the following \emph{mandatory}
+%% group naming conventions:\\
 
-In addition to the amplitude and phase groups, we highly recommend to
-also store the NR waveform times $\tGW$, i.e., the one-dimensional
-data array containing the original time-steps of the NR data, as a
-H5-dataset in the final HDF5 file.  \red{[HP: Patricia, specify format and group-name for the $t_{\rm GW}$ dataset.]}
+%% \begin{longtable}{|p{4cm}|p{2.5cm}|p{9.6cm}|}
+%%   \hline  \emph{group-name} & \emph{type} & \emph{description} \\ \hline
+%%   \endhead
+%%   \hline  \emph{group-name} & \emph{type} & \emph{description} \\ \hline
+%% \endfirsthead
+%% \hline 
+%%  \multicolumn{3}{r}{\emph{continued}}
+%% \endfoot
+%% \hline
+%% \endlastfoot
+%%   \hline 
+%% \textbf{amp\textunderscore l\#1\textunderscore m\#2} & romSpline-group & amplitude $A_{\ell m}(t_{\rm GW})$ \\
+%% \textbf{phase\textunderscore  l\#1\textunderscore m\#2} & romSpline-group  & phase $\Phi_{\ell m}(t_{\rm GW})$
+%% \\ \hline 
+%% \end{longtable}
+%% $ $\\ \\
+
+%% Here (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the group naming convention is phase\textunderscore l2\textunderscore m-2 and 
+%% amp\textunderscore l2\textunderscore m-2. 
+%% \patricia{\sout{Is it clear that there is one .h5 file per NR simulation?}} \red{[HP added extra text to start of Sec. II]}
+
+%% In addition to the amplitude and phase groups, we highly recommend to
+%% also store the NR waveform times $\tGW$, i.e., the one-dimensional
+%% data array containing the original time-steps of the NR data, as a
+%% H5-dataset in the final HDF5 file.  \red{[HP: Patricia, specify format and group-name for the $t_{\rm GW}$ dataset.]}
 
 %%%%%%%%%%%%%%%
-\subsection{Metadata and additional HDF5 groups}
+\subsection{Metadata stored as HDF5-attributes}
 \label{sec:meta}
 %%%%%%%%%%%%%%%
 The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}. The metadata are described in the following list, and are stored as \emph{attributes} of the final HDF5 file for each NR simulation. Often, more extensive metadata are available for a NR simulation. We recommend that such additional metadata is included as a free-format text dataset in the 'auxiliary-info' H5-group (see below). 
 
 Required time-dependent metadata (see list below) have to contain the values corresponding to the first entry in the stored time series. For pure NR data, since the junk radiation has to be removed, these are \emph{not} the initial data of the simulation. We refer to this very first data point stored in the time series as the \emph{beginning} of the waveform data. 
 
-Vectors must be represented by their Cartesian components in the NR frame (see Sec.~\ref{sec:NRconv}). This ccoordinate system is consistent with the one used in the decomposition in spherical harmonics (e.g. the polar axis of the spherical harmonics must point along the +z-axis). No requirements are placed on the orientation of the NR frame. For instance, the orbital unit separation vector 'nhat' and the Newtonian unit orbital angular momentum 'LNhat' need not point along specific coordinate axes. Note also that the spin-fields in the metadata 'spin\{1,2\}\{x,y,z\}' are given in the NR frame, and \emph{not} in the LAL frame. The rotation of the GW modes into the LAL frame is taken care of by the NR injection infrastructure, following the conventions described in Sec.~\ref{sec:coordinates}. 
+Vectors must be represented by their Cartesian components in the NR frame (see Sec.~\ref{sec:NRconv}). This coordinate system is consistent with the one used in the decomposition in spherical harmonics (e.g. the polar axis of the spherical harmonics must point along the +z-axis). No requirements are placed on the orientation of the NR frame. For instance, the orbital unit separation vector 'nhat' and the Newtonian unit orbital angular momentum 'LNhat' need not point along specific coordinate axes. Note also that the spin-fields in the metadata 'spin\{1,2\}\{x,y,z\}' are given in the NR frame, and \emph{not} in the LAL frame. The rotation of the GW modes into the LAL frame is taken care of by the NR injection infrastructure, following the conventions described in Sec.~\ref{sec:coordinates}. 
 
-Note: The time-coordinate of spins, positions, masses and their respective time-series will be associated with the apparent horizon, e.g. the NR coordinate time $t_\mathrm{NR}$. Such a time cannot unambiguously be identified w1
-ith the retarded time $\tGW$ of the waveform modes. However, the submitter is asked to make a reasonable effort to have the same numerical values of $t_\mathrm{NR}$ and $\tGW$ to correspond to the same portion of the waveform, e.g. through choosing $\tGW = t_\mathrm{NR} - R_\mathrm{extraction}$, where $R_\mathrm{extraction}$ is a finite extraction radius.
-\\
+Note: The time-coordinate of spins, positions, masses and their
+respective time-series will be associated with the apparent horizon,
+e.g. the NR coordinate time $t_\mathrm{NR}$. Such a time cannot
+unambiguously be identified with the retarded time $\tGW$ of the
+waveform modes. However, the submitter is asked to make a reasonable
+effort to have the same numerical values of $t_\mathrm{NR}$ and $\tGW$
+to correspond to the same portion of the waveform, e.g. through
+choosing $\tGW = t_\mathrm{NR} - R^*_\mathrm{extraction}$, where
+$R^*_\mathrm{extraction}$ is the tortoise radius of the extraction sphere~\cite{Fiske:2005fx,Boyle:2009vi}.  \\
 \newline
-Three versions of .h5 files, specified by the attribute `Format', are compatible. All of them require the following metadata stored as attributes of the .h5 file: \\
+%Three versions of .h5 files, specified by the attribute `Format', are compatible. All of them require the following metadata stored as attributes of the .h5 file: \\
 
 \noindent
 
@@ -321,30 +342,30 @@ Three versions of .h5 files, specified by the attribute `Format', are compatible
 \endfoot
 \hline
 \endlastfoot
-  \textbf{Format} & integer & indicates what data are supplied. Must be 1, 2, 3.\\
-  \textbf{type} & string & keyword description of the simulation as requested by the LIGO Open Science Center (LOSC). Required value: NRinjection.\\
+  \textbf{Format} & integer & indicates what data are supplied. Must be 1, 2, 3\\
+  \textbf{type} & string & keyword description of the simulation as requested by the LIGO Open Science Center (LOSC). Required value: NRinjection\\
   \textbf{name} & string  & short identifier of the simulation, e.g., SXS:BBH:0019\\
 
 
 \textbf{alternative-names} & string & comma-separated list of user-specifiable alternative names. These names can be longer, more descriptive, and/or include what specific series of simulations this configuration belongs to.\\
 
-\textbf{NR-group} & string &  name of the NR group that carried out the simulation.\\
+\textbf{NR-group} & string &  name of the NR group that carried out the simulation\\
 
-\textbf{NR-code} & string &  name of the NR code that was used to carry out the simulation.\\
+\textbf{NR-code} & string &  name of the NR code that was used to carry out the simulation\\
 
-\textbf{modification-date} & string & date when this .h5 file was last updated. Format 'YYYY-MM-DD'.\\
+\textbf{modification-date} & string & date when this .h5 file was last updated. Format 'YYYY-MM-DD'\\
 
-\textbf{point-of-contact-email} & string & contact person for questions.\\
+\textbf{point-of-contact-email} & string & contact person for questions\\
 
-\textbf{simulation-type} & string & keyword description of the spin configuration. Allowed values are: aligned-spins, non-spinning, precessing.\\
+\textbf{simulation-type} & string & keyword description of the spin configuration. Allowed values are: aligned-spins, non-spinning, precessing\\
 
-\textbf{INSPIRE-bibtex-keys} & string & comma-separated list of INSPIRE bibtex keys that should be cited when this waveform is used (1-3 publications).\\
+\textbf{INSPIRE-bibtex-keys} & string & comma-separated list of INSPIRE bibtex keys that should be cited when this waveform is used (1-3 publications)\\
 
-\textbf{license} & string & allowed values are: LVC-internal, public.\\
+\textbf{license} & string & allowed values are: LVC-internal, public\\
 
-\textbf{Lmax} & integer & the maximum $\ell$-value for which  $h_{\ell m}$-modes are supplied (all modes with $\ell \leq \mathrm{Lmax}$, $-\ell \leq m \leq +\ell$ have to be provided).\\
+\textbf{Lmax} & integer & the maximum $\ell$-value for which  $h_{\ell m}$-modes are supplied (all modes with $\ell \leq \mathrm{Lmax}$, $-\ell \leq m \leq +\ell$ have to be provided)\\
 
-\textbf{NR-techniques} & string & attempts to summarize major elements of the NR simulation. A comma-separated list of one element in each of the following categories. \\
+\textbf{NR-techniques} & string & attempts to summarize major elements of the NR simulation. A comma-separated list of one element in each of the following categories \\
   & & \parbox{11.2cm}{
 Category 1: Puncture-ID, Quasi-Equilibrium-ID \\
 Category 2: BSSN, GH, Z4c \\
@@ -373,36 +394,42 @@ Example: 'Quasi-Equilibrium-ID, GH, RWZ-h, Extrapolated-Waveform, ApproxKillingV
 
 \textbf{f\textunderscore lower\textunderscore at\textunderscore 1MSUN} & float & frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to $1M_\odot$\\
 
-\textbf{spin1x} & float & x-component of the dimensionless spin of the heavier object in the NR simulation frame.\\
+\textbf{spin1x} & float & components of $\vec\chi_1(t_{\rm begin})$ in NR simulation frame\\
 
-\textbf{spin1y} & float & y-component of the dimensionless spin of the heavier object in the NR simulation frame.\\
+\textbf{spin1y} & float & \\
 
-\textbf{spin1z} & float & z-component of the dimensionless spin of the heavier object in the NR simulation frame.\\
+\textbf{spin1z} & float & \\
 
-\textbf{spin2x} & float & x-component of the dimensionless spin of the lighter object in the NR simulation frame.\\
+\textbf{spin2x} & float & components of $\vec\chi_2(t_{\rm begin})$ in NR simulation frame\\
 
-\textbf{spin2y} & float & y-component of the dimensionless spin of the lighter object in the NR simulation frame.\\
+\textbf{spin2y} & float &  \\
 
-\textbf{spin2z} & float & z-component of the dimensionless spin of the lighter object in the NR simulation frame.\\
+\textbf{spin2z} & float & \\
 
-\textbf{LNhatx} & float & x-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.\\
+\textbf{LNhatx} & float & components of the Newtonian orbital angular momentum unit vector $\hat L_N(t_{\rm begin})$ in NR simulation frame\\
 
-\textbf{LNhaty} & float & y-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.\\
+\textbf{LNhaty} & float & \\
 
-\textbf{LNhatz} & float & z-component of the Newtonian orbital angular momentum unit vector in the NR simulation frame.\\
+\textbf{LNhatz} & float & \\
 
-\textbf{nhatx} & float & x-component of the orbital separation unit vector in the NR simulation frame defined as the unit vector pointing from the lighter (mass2) to the heavier (mass1) object.\\
+\textbf{nhatx} & float & components of the orbital separation unit vector $\hat n(t_{\rm begin})\equiv \vec{c}_1(t_{\rm begin})-\vec c_2(t_{\rm begin})$ in NR simulation frame\\
 
-\textbf{nhaty} & float & y-component of the orbital separation unit vector in the NR simulation frame.\\
+\textbf{nhaty} & float & \\
 
-\textbf{nhatz} & float & z-component of the orbital separation unit vector in the NR simulation frame.\\
+\textbf{nhatz} & float & \\
 
-\textbf{Omega} & float & orbital frequency. \\
+\textbf{Omega} & float & dimensionless orbital frequency $M\Omega(t_{\rm begin})$ \red{or dimensionful $\Omega$??} \\
 
-\textbf{eccentricity} & float & estimated eccentricity of the simulation.\\
+\textbf{eccentricity} & float & estimated eccentricity of the simulation at $t=t_{\rm begin}$\\
 
-\textbf{mean\textunderscore anomaly} & float & estimated mean anomaly (cf. Eq.~\ref{eq:anomaly}). For $\mathrm{eccentricity} \leq 10^{-3}$, it is allowed to set mean\textunderscore anomaly to 0. If the mean anomaly has not been computed, set mean\textunderscore anomaly to -1.\\
-\textbf{PN\textunderscore approximant} & string & \emph{Only present for PN-NR hyrbid waveforms}: identifier of the inspiral approximant 
+\textbf{mean\textunderscore anomaly} & float & estimated mean anomaly
+(cf. Eq.~\ref{eq:anomaly}) at $t_{\rm begin}$. For
+  $\mathrm{eccentricity} \leq 10^{-3}$, it is allowed to set
+  mean\textunderscore anomaly to 0. If the mean anomaly has not been
+  computed, set mean\textunderscore anomaly to
+  -1.\\ \textbf{PN\textunderscore approximant} & string & \emph{Only
+    present for PN-NR hyrbid waveforms}: identifier of the inspiral
+  approximant
 \end{longtable}
 
 
@@ -495,85 +522,149 @@ Example: 'Quasi-Equilibrium-ID, GH, RWZ-h, Extrapolated-Waveform, ApproxKillingV
 %% \end{itemize}
 %
 
+%% In addition to the H5 groups that store the waveform data (amplitudes
+%% and phases), a H5-group for storing auxiliary information is required:
+%% \begin{itemize}
+%% \item{[}'auxiliary-info'{]}: H5-group; this group can contain anything that the submitter finds helpful to identify, document and repeat the run. 
+%% \end{itemize}
+%
 
-\renewcommand*{\arraystretch}{1.3} % extra spacing between entries
-\begin{longtable}{|p{3.4cm}|p{1.6cm}|p{11.2cm}|}
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data stored as HDF5-groups}
+\label{sec:format:groups}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The following groups are required inside the .h5 file that represents
+a simulation.
+Some groups are optional and only need to be given if Format=2 or Format=3.
+All time-series represent ROM-compressed data obtained via
+\texttt{romSpline} in the same way as the amplitudes and phases (see
+Sec.~\ref{sec:spline} for details). \\
+
+
+%\renewcommand*{\arraystretch}{1.3} % extra spacing between entries
+\begin{longtable}{|p{4cm}|p{2.5cm}|p{9.6cm}|}
   \hline  \emph{group-name} & \emph{type} & \emph{description} \\ \hline
   \endhead
-  \hline  \emph{attribute-name} & \emph{type} & \emph{description} \\ \hline
+  \hline  \emph{group-name} & \emph{type} & \emph{description} \\ \hline
 \endfirsthead
 \hline 
  \multicolumn{3}{r}{\emph{continued}}
 \endfoot
 \hline
 \endlastfoot
+\textbf{auxiliary-info} & group & Contains anything that the submitter finds helpful to identify, document and repeat the run\\ 
+\textbf{original-GW-times} & group & \emph{optional but highly recommended:} 1-d array of the discrete times $t_{\rm GW}$ that formed the input-times into the romSpline compression of
+ {\tt amp\textunderscore l\#1\textunderscore m\#2} and {\tt phase\textunderscore \#1\textunderscore m\#2} \red{[HP: Patricia, please check this entry and correct as needed]}\\ \hline
+
+\multicolumn{3}{|l|}{
+  \rule[-.7em]{0pt}{2em}
+       {\bf GW waveform modes:} \emph{Two groups for each \boldmath$(\ell, m)$, $2\le \ell\le L_{\rm max}$, $-\ell\le m\le +\ell$}}\\ \hline
+\textbf{amp\textunderscore l\#1\textunderscore m\#2} & romSpline-group & amplitude $A_{\ell m}(t_{\rm GW})$  \\
+\textbf{phase\textunderscore  l\#1\textunderscore m\#2} & romSpline-group  & phase $\Phi_{\ell m}(t_{\rm GW})$
+\\ \hline 
+
+  %% In addition to the amplitude and phase groups, we highly recommend to
+%% also store the NR waveform times $\tGW$, i.e., the one-dimensional
+%% data array containing the original time-steps of the NR data, as a
+%% H5-dataset in the final HDF5 file. 
+
+\multicolumn{3}{|l|}{
+  \rule[-.7em]{0pt}{2em}
+       {\bf if Format \boldmath $\mathbf{\ge 2}$, also specify}}\\ \hline
+\textbf{mass1-vs-time} & romSpline-group & BH-mass $M_1(t)$ \\
+\textbf{mass2-vs-time} & romSpline-group & BH-mass $M_2(t)$ \\
+\textbf{spin1x-vs-time} & romSpline-group & components of BH-spin $\vec\chi_1(t)$\\
+\textbf{spin1y-vs-time} & romSpline-group & \\
+\textbf{spin1z-vs-time} & romSpline-group & \\
+\textbf{spin2x-vs-time} & romSpline-group & components of BH-spin $\vec\chi(t)$ \\
+\textbf{spin2y-vs-time} & romSpline-group & \\
+\textbf{spin2z-vs-time} & romSpline-group & \\
+\textbf{position1x-vs-time} & romSpline-group & components of BH-center $\vec c_1(t)$ \\
+\textbf{position1y-vs-time} & romSpline-group & \\
+\textbf{position1z-vs-time} & romSpline-group & \\
+\textbf{position2x-vs-time} & romSpline-group & components of BH-center $\vec c_2(t)$ \\
+\textbf{position2y-vs-time} & romSpline-group & \\
+\textbf{position2z-vs-time} & romSpline-group & \\
+\textbf{LNhatx-vs-time} & romSpline-group & components of Newtonian angular momentum direction, $\hat L_N(t)$\\
+\textbf{LNhaty-vs-time} & romSpline-group & \\
+\textbf{LNhatz-vs-time} & romSpline-group & \\
+\textbf{Omega-vs-time} & romSpline-group & dimensionless orbital frequency $M\Omega(t)$  \red{or $\Omega(t)$ ??}\\ 
+
+\hline
+
+\multicolumn{3}{|l|}{
+  \rule[-.7em]{0pt}{2em}
+       {\bf if Format \boldmath $\mathbf{\ge 3}$, also specify}}\\ \hline
+
+\textbf{remnant-mass-vs-time} & romSpline-group &  $M_{\rm remnant}(t)$\\
+\textbf{remnant-spinx-vs-time} & romSpline-group & components of $\vec\chi_{\rm remnant}(t)$\\
+\textbf{remnant-spiny-vs-time} & romSpline-group & \\
+\textbf{remnant-spinz-vs-time} & romSpline-group & \\
+\textbf{remnant-positionx-vs-time} & romSpline-group & components of BH-center $\vec c_{\rm remnant}(t)$ \\
+\textbf{remnant-positiony-vs-time} & romSpline-group &\\
+\textbf{remnant-positionz-vs-time} & romSpline-group &
+
+\end{longtable}
 
 
 
+%% \begin{itemize}
+%% \item{[}'mass1-vs-time'{]}: romSpline-HDF5-group
 
+%% \item{[}'mass2-vs-time'{]}: romSpline-HDF5-group
 
-In addition to the H5 groups that store the waveform data (amplitudes and phases), a H5-group for storing auxiliary information is required: 
-\begin{itemize}
-\item{[}'auxiliary-info'{]}: H5-group; this group can contain anything that the submitter finds helpful to identify, document and repeat the run. 
-\end{itemize}
-%
-All of the above attributes and H5-groups are required for file formats 1,2 and 3. Format 2 additionally requires the following H5-groups that contain time series data obtained via \texttt{romSpline} in the same way as the amplitudes and phases (see Sec.~\ref{sec:spline} for details):
-\begin{itemize}
-\item{[}'mass1-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'spin1x-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'mass2-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'spin1y-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'spin1x-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'spin1z-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'spin1y-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'spin2x-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'spin1z-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'spin2y-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'spin2x-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'spin2z-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'spin2y-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'position1x-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'spin2z-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'position1y-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'position1x-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'position1z-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'position1y-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'position2x-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'position1z-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'position2y-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'position2x-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'position2z-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'position2y-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'LNhatx-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'position2z-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'LNhaty-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'LNhatx-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'LNhatz-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'LNhaty-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'Omega-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'LNhatz-vs-time'{]}: romSpline-HDF5-group
+%% \end{itemize}
+%% %
+%% Format 3 requires additional H5-groups (obtained via romSpline) that contain time-series data for the remnant black hole: 
+%% \begin{itemize}
+%% \item{[}'remnant-mass-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'Omega-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'remnant-spinx-vs-time'{]}: romSpline-HDF5-group
 
-\end{itemize}
-%
-Format 3 requires additional H5-groups (obtained via romSpline) that contain time-series data for the remnant black hole: 
-\begin{itemize}
-\item{[}'remnant-mass-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'remnant-spiny-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'remnant-spinx-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'remnant-spinz-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'remnant-spiny-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'remnant-positionx-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'remnant-spinz-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'remnant-positiony-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'remnant-positionx-vs-time'{]}: romSpline-HDF5-group
+%% \item{[}'remnant-positionz-vs-time'{]}: romSpline-HDF5-group
 
-\item{[}'remnant-positiony-vs-time'{]}: romSpline-HDF5-group
-
-\item{[}'remnant-positionz-vs-time'{]}: romSpline-HDF5-group
-
-\end{itemize}
+%% \end{itemize}
 
 
 %%%%%%%%%%%%%%%
@@ -587,13 +678,20 @@ Note: The waveform generator requires the input spin values to be defined as giv
 For a given starting frequency and total mass, a time array is allocated based on an estimate of the waveform length. We use the LAL-function 
 \texttt{SimIMRSEOBNRv2ChirpTimeSingleSpin} to estimate the waveform length with an additional leverage of 10\%. If the NR waveforms are not long enough for a given total mass and starting frequency, the generation is aborted and an error is generated. From the estimated length and the desired sampling rate, the discrete time series for the spline evaluation is determined.
 
-To construct the NR GW polarisations $h_+$ and $h_\times$ in the LAL wave-frame, first the splines for each NR amplitude and phase are first evaluated at the required sampling times and convolved with the spin-weighted spherical harmonics\begin{align}
-\label{}
-    \mathrm{Re}(H_{\ell m}) &= A_{\ell m} \cos(\Phi_{\ell m}),   \\
-    \mathrm{Im}(H_{\ell m}) &= A_{\ell m} \sin(\Phi_{\ell m}),   \\
-    h^\mathrm{NR}_+ &= \sum_{\ell, m} \mathrm{Re}(H_{\ell m}) \mathrm{Re}({}^{-2}Y_{\ell m}) - \mathrm{Im}(H_{\ell m}) \mathrm{Im}({}^{-2}Y_{\ell m}), \\
-    h^\mathrm{NR}_\times &= \sum_{\ell, m} -\mathrm{Re}(H_{\ell m}) \mathrm{Im}({}^{-2}Y_{\ell m}) - \mathrm{Im}(H_{\ell m}) \mathrm{Re}({}^{-2}Y_{\ell m}).
-\end{align}
+To construct the NR GW polarisations $h_+$ and $h_\times$ in the LAL
+wave-frame, first the splines for each NR amplitude and phase are
+first evaluated at the required sampling times and convolved with the
+spin-weighted spherical harmonics
+%% \begin{align}
+%% \label{eq:Hlm}
+%%     \mathrm{Re}(H_{\ell m}) &= A_{\ell m} \cos(\Phi_{\ell m}),
+%%     \\ \mathrm{Im}(H_{\ell m}) &= A_{\ell m} \sin(\Phi_{\ell m}),
+%%     \\ h^\mathrm{NR}_+ &= \sum_{\ell, m} \mathrm{Re}(H_{\ell m})
+%%     \mathrm{Re}({}^{-2}Y_{\ell m}) - \mathrm{Im}(H_{\ell m})
+%%     \mathrm{Im}({}^{-2}Y_{\ell m}), \\ h^\mathrm{NR}_\times &=
+%%     \sum_{\ell, m} -\mathrm{Re}(H_{\ell m}) \mathrm{Im}({}^{-2}Y_{\ell
+%%       m}) - \mathrm{Im}(H_{\ell m}) \mathrm{Re}({}^{-2}Y_{\ell m}).
+%% \end{align}
 Finally, the NR polarizations are transformed into the LAL wave-frame following Eqs.~(\ref{eq:PolarizationTrafo}). \\
 Note that all waveform modes $(\ell, m)$ present in the HDF5 file are used
 to compute the two polarisations. The algorithm will incorporate any mode between $\ell =2$ and $\ell =8$ if present in the
