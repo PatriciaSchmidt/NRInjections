@@ -153,14 +153,13 @@ Numerical Relativity already plays a crucial role in GW data analysis: the const
 
 In the Advanced detector era, it is very advantageous to be able to directly use NR waveforms in gravitational-wave searches and parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within a uniform framework. Such use of NR waveforms should be easy and convenient.
 This is the purpose of the new \emph{Numerical Relativity Injection Infrastructure} described in this document. Once the NR data is provided in a specific format (as described below), this infrastructure allows for the treatment of
-NR waveforms as a ``discrete'' waveform approximant, which can seamlessly be called from within the LIGO Algorithm Library (LAL)\footnote{Available at \url{https://www.lsc-group.phys.uwm.edu/daswg/projects/lalsuite.html}}.
-\patricia{Is this the appropriate reference?}
+NR waveforms as a ``discrete'' waveform approximant, which can seamlessly be called from within the LIGO Algorithm Library (LAL)\footnote{Available at \url{https://wiki.ligo.org/DASWG/LALSuite}}.
 
 In previous efforts, binary-black-hole (BBH) hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown waveform, were used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}.  
 However, the previously employed NR modules in LAL
 %data format~\cite{Brown:2007jx} 
 require the NR waveforms to be resampled at a uniform time-spacing. In the NINJA framework, the resampling was performed \emph{before} inserting the total mass scale. For the waveforms to be
-useable at high total mass, the time-spacing in the NR data has to be very small, resulting in very large storage requirements, even if only the dominant harmonics $(\ell,m)=(2,\pm 2)$ is supplied.
+useable at high total mass, the time-spacing in the NR data has to be very small, resulting in very large storage requirements, even if only the dominant harmonics $(\ell,m)=(2,\pm 2)$ are supplied.
 
 The new infrastructure described here improves on the earlier approaches
 in several significant ways. First, data is stored in a highly efficient compressed format~\cite{Galley:2016mvy}; even including a large number of sub-dominant modes (as is now encouraged), storage requirements are lower than just for the dominant modes in the preceding storage format.  
