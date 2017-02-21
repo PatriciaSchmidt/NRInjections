@@ -183,9 +183,9 @@ All data for \emph{one} NR simulation is provided in a single HDF5-file.
       \item Optionally, additional information about the dynamics of
         the black holes.
   \end{enumerate}
-When multiple \red{NR data sets} \sout{sets of waveform-modes} for the
+When multiple \red{NR datasets} \sout{sets of waveform-modes} for the
 identical physical configuration (e.g. during a convergence test, or
-for different choices during GW extraction) are provided, then each \red{NR data set 
+for different choices during GW extraction) are provided, then each \red{NR dataset 
 including metadata} \sout{set of
 waveform-modes} needs to be stored in a separate .h5 file \red{with a unique name}.
 \patricia{Harald, I made a few changes here to avoid people thinking that HDF5 files with
@@ -263,7 +263,7 @@ data~\cite{Galley:2016mvy}. This is a particular advantage for long
 simulations or hybrid data, but also significantly reduces the storage
 and I/O for pure NR data.
 
-The one-dimensional spline compression is performed separately for each {\bf mode amplitude} $A_{\ell m}(\tGW)$ and {\bf phase} $\Phi_{\ell m}(\tGW)$, which are
+The one-dimensional spline compression is performed separately for each {\bf mode amplitude} $A_{\ell m}(\tGW)$ and {\bf mode phase} $\Phi_{\ell m}(\tGW)$, which are
 already time-shifted such that $\tGW=0$ corresponds to the peak of the waveform. 
 Pure NR data without an inspiral need to have the initial \emph{junk radiation} removed \emph{before} the spline interpolants are constructed. We refer to this very first data point stored in the time series after removing the initial junk as the \emph{beginning} of the waveform. No tapering should be applied at the beginning or end of the waveform data. 
 
@@ -273,38 +273,34 @@ i.e., if the spline is evaluated at the original discrete NR times $\tGW$, the o
 For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016mvy}. The spline compression is conveniently performed using the publicly available Python package \texttt{romSpline} by Chad R. Galley~\cite{romspline}. The spline interpolants for each amplitude and phase are obtained via \verb"romSpline" as follows: 
 \begin{alltt}
 import romSpline 
-spline = romSpline.ReducedOrderSpline(\(\tGW\), \(A\sb{\ell,m}(\tGW) or \Phi\sb{\ell,m}(\tGW)\), verbose=False)
+spline = romSpline.ReducedOrderSpline(\(\tGW\), \(A\sb{\ell,m}(\tGW) or \Phi\sb{\ell,m}(\tGW)\), 
+																		                                     verbose=False)
 spline.write('filename.h5')
 \end{alltt}
 The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series data and is composed of five datasets: (deg, tol, X, Y, errors)\footnote{The latest version of {\tt romSpline} allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file.}.
 
 The spline interpolants for each $(\ell,m)$-mode for a single NR
 simulation are stored as individual H5-groups in the
-\emph{final HDF5 output file} under the group-names given below in Sec.~\ref{sec:format:groups}.
+\emph{final HDF5 output file} under the mandatory group-names given below and summarized in Sec.~\ref{sec:format:groups}:\\
 
-
-%% with the following \emph{mandatory}
-%% group naming conventions:\\
-
-%% \begin{longtable}{|p{4cm}|p{2.5cm}|p{9.6cm}|}
-%%   \hline  \emph{group-name} & \emph{type} & \emph{description} \\ \hline
-%%   \endhead
-%%   \hline  \emph{group-name} & \emph{type} & \emph{description} \\ \hline
-%% \endfirsthead
-%% \hline 
-%%  \multicolumn{3}{r}{\emph{continued}}
-%% \endfoot
-%% \hline
-%% \endlastfoot
-%%   \hline 
-%% \textbf{amp\textunderscore l\#1\textunderscore m\#2} & romSpline-group & amplitude $A_{\ell m}(t_{\rm GW})$ \\
-%% \textbf{phase\textunderscore  l\#1\textunderscore m\#2} & romSpline-group  & phase $\Phi_{\ell m}(t_{\rm GW})$
-%% \\ \hline 
-%% \end{longtable}
-%% $ $\\ \\
-
-%% Here (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the group naming convention is phase\textunderscore l2\textunderscore m-2 and 
-%% amp\textunderscore l2\textunderscore m-2. 
+ \begin{longtable}{|p{4cm}|p{2.5cm}|p{9.6cm}|}
+   \hline  \emph{Group-name} & \emph{Type} & \emph{Description} \\ \hline
+   \endhead
+   \hline  \emph{Group-name} & \emph{Type} & \emph{Description} \\ \hline
+ \endfirsthead
+ \hline 
+  \multicolumn{3}{r}{\emph{continued}}
+ \endfoot
+ \hline
+ \endlastfoot
+   \hline 
+ \textbf{amp\textunderscore l\#1\textunderscore m\#2} & romSpline-group & amplitude $A_{\ell m}(t_{\rm GW})$ \\
+ \textbf{phase\textunderscore  l\#1\textunderscore m\#2} & romSpline-group  & phase $\Phi_{\ell m}(t_{\rm GW})$
+ \\ \hline 
+ \end{longtable}
+ $ $ \\
+ Here (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the group naming convention is phase\textunderscore l2\textunderscore m-2 and amp\textunderscore l2\textunderscore m-2. 
+ \patricia{I think it is important to keep the example here to avoid any confusions.}
 %% \patricia{\sout{Is it clear that there is one .h5 file per NR simulation?}} \red{[HP added extra text to start of Sec. II]}
 
 %% In addition to the amplitude and phase groups, we highly recommend to
@@ -318,7 +314,7 @@ simulation are stored as individual H5-groups in the
 %%%%%%%%%%%%%%%
 The metadata format is adapted from the original NINJA-2 metadata format~\cite{Brown:2007jx}. The metadata are described in the following list, and are stored as \emph{attributes} of the final HDF5 file for each NR simulation. Often, more extensive metadata are available for a NR simulation. We recommend that such additional metadata is included as a free-format text dataset in the 'auxiliary-info' H5-group (see below). 
 
-Required time-dependent metadata (see list below) have to contain the values corresponding to the first entry in the stored time series. For pure NR data, since the junk radiation has to be removed, these are \emph{not} the initial data of the simulation. We refer to this very first data point stored in the time series as the \emph{beginning} of the waveform data. 
+Required time-dependent metadata (see list below) have to contain the values corresponding to the first entry in the stored time series. For pure NR data, since the junk radiation has to be removed, these are \emph{not} the initial data of the simulation. We refer to this very first data point stored in the time series as the \emph{beginning} of the waveform data, subsequently indicated by $t_\mathrm{begin}$. 
 
 Vectors must be represented by their Cartesian components in the NR frame (see Sec.~\ref{sec:NRconv}). This coordinate system is consistent with the one used in the decomposition in spherical harmonics (e.g. the polar axis of the spherical harmonics must point along the +z-axis). No requirements are placed on the orientation of the NR frame. For instance, the orbital unit separation vector 'nhat' and the Newtonian unit orbital angular momentum 'LNhat' need not point along specific coordinate axes. Note also that the spin-fields in the metadata 'spin\{1,2\}\{x,y,z\}' are given in the NR frame, and \emph{not} in the LAL frame. The rotation of the GW modes into the LAL frame is taken care of by the NR injection infrastructure, following the conventions described in Sec.~\ref{sec:coordinates}. 
 
@@ -392,41 +388,41 @@ Example: 'Quasi-Equilibrium-ID, GH, RWZ-h, Extrapolated-Waveform, ApproxKillingV
 
 \textbf{object2} & string & keyword description to identify the object type. Allowed values are: BH, NS\\
 
-\textbf{mass1} & float & mass of the more massive object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.\\
+\textbf{mass1} & float & mass of the more massive object at $t_{\rm begin}$; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.\\
 
-\textbf{mass2} & float & mass of the lighter object; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.\\
+\textbf{mass2} & float & mass of the lighter object at $t_{\rm begin}$; if both objects are BH, the unit of mass is arbitrary. If at least one object is a NS, then the unit is solar mass $M_\odot$.\\
 
-\textbf{eta} & float & the symmetric mass ratio of the simulation.\\
+\textbf{eta} & float & the symmetric mass ratio of the simulation at $t_{\rm begin}$.\\
 
 \textbf{f\textunderscore lower\textunderscore at\textunderscore 1MSUN} & float & frequency of the $(2,2)$-mode in Hz at the beginning of the waveform scaled to $1M_\odot$\\
 
-\textbf{spin1x} & float & components of $\vec\chi_1(t_{\rm begin})$ in NR simulation frame\\
+\textbf{spin1x} & float & x-component of the dimensionless spin vector $\vec\chi_1(t_{\rm begin})$ in NR frame\\
 
-\textbf{spin1y} & float & \\
+\textbf{spin1y} & float & y-component of the dimensionless spin vector $\vec\chi_1(t_{\rm begin})$ in NR frame\\
 
-\textbf{spin1z} & float & \\
+\textbf{spin1z} & float & z-component of the dimensionless spin vector $\vec\chi_1(t_{\rm begin})$ in NR frame\\
 
-\textbf{spin2x} & float & components of $\vec\chi_2(t_{\rm begin})$ in NR simulation frame\\
+\textbf{spin2x} & float & x-component of the dimensionless spin vector $\vec\chi_2(t_{\rm begin})$ in NR frame\\
 
-\textbf{spin2y} & float &  \\
+\textbf{spin2y} & float & y-component of the dimensionless spin vector $\vec\chi_2(t_{\rm begin})$ in NR frame\\
 
-\textbf{spin2z} & float & \\
+\textbf{spin2z} & float & z-component of the dimensionless spin vector $\vec\chi_2(t_{\rm begin})$ in NR frame\\
 
-\textbf{LNhatx} & float & components of the Newtonian orbital angular momentum unit vector $\hat L_N(t_{\rm begin})$ in NR simulation frame\\
+\textbf{LNhatx} & float & x-component of the Newtonian orbital angular momentum unit vector $\hat L_N(t_{\rm begin})$ in NR frame\\
 
-\textbf{LNhaty} & float & \\
+\textbf{LNhaty} & float & y-component of the Newtonian orbital angular momentum unit vector $\hat L_N(t_{\rm begin})$ in NR frame\\
 
-\textbf{LNhatz} & float & \\
+\textbf{LNhatz} & float & z-component of the Newtonian orbital angular momentum unit vector $\hat L_N(t_{\rm begin})$ in NR frame\\
 
-\textbf{nhatx} & float & components of the orbital separation unit vector $\hat n(t_{\rm begin})\equiv \vec{c}_1(t_{\rm begin})-\vec c_2(t_{\rm begin})$ in NR simulation frame\\
+\textbf{nhatx} & float & x-components of the orbital separation unit vector $\hat n(t_{\rm begin})$ given by Eq.~(\ref{eq:nhat}) in NR frame\\
 
-\textbf{nhaty} & float & \\
+\textbf{nhaty} & float & y-components of the orbital separation unit vector $\hat n(t_{\rm begin})$ given by Eq.~(\ref{eq:nhat}) in NR frame\\
 
-\textbf{nhatz} & float & \\
+\textbf{nhatz} & float & z-components of the orbital separation unit vector $\hat n(t_{\rm begin})$ given by Eq.~(\ref{eq:nhat}) in NR frame\\
 
-\textbf{Omega} & float & dimensionless orbital frequency $M\Omega(t_{\rm begin})$ \red{or dimensionful $\Omega$??} \\
+\textbf{Omega} & float & dimensionless orbital frequency $M\Omega(t_{\rm begin})$ \\
 
-\textbf{eccentricity} & float & estimated eccentricity of the simulation at $t=t_{\rm begin}$\\
+\textbf{eccentricity} & float & estimated eccentricity of the simulation at $t_{\rm begin}$\\
 
 \textbf{mean\textunderscore anomaly} & float & estimated mean anomaly
 (cf. Eq.~\ref{eq:anomaly}) at $t_{\rm begin}$. For
@@ -535,9 +531,9 @@ Example: 'Quasi-Equilibrium-ID, GH, RWZ-h, Extrapolated-Waveform, ApproxKillingV
 %% \end{itemize}
 %
 
-\newpage
+%\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Data stored as HDF5-groups}
+\subsection{Data stored as HDF5-groups and datasets}
 \label{sec:format:groups}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The following groups are required inside the .h5 file that represents
@@ -550,22 +546,22 @@ Sec.~\ref{sec:spline} for details). \\
 
 %\renewcommand*{\arraystretch}{1.3} % extra spacing between entries
 \begin{longtable}{|p{4cm}|p{2.5cm}|p{9.6cm}|}
-  \hline  \emph{group-name} & \emph{type} & \emph{description} \\ \hline
+  \hline  \emph{Group-name} & \emph{Type} & \emph{Description} \\ \hline
   \endhead
-  \hline  \emph{group-name} & \emph{type} & \emph{description} \\ \hline
+  \hline  \emph{Group-name} & \emph{Type} & \emph{Description} \\ \hline
 \endfirsthead
 \hline 
  \multicolumn{3}{r}{\emph{continued}}
 \endfoot
 \hline
 \endlastfoot
-\textbf{auxiliary-info} & group & Contains anything that the submitter finds helpful to identify, document and repeat the run\\ 
-\textbf{original-GW-times} & group & \emph{optional but highly recommended:} 1-d array of the discrete times $t_{\rm GW}$ that formed the input-times into the romSpline compression of
- {\tt amp\textunderscore l\#1\textunderscore m\#2} and {\tt phase\textunderscore \#1\textunderscore m\#2} \red{[HP: Patricia, please check this entry and correct as needed]}\\ \hline
+\textbf{auxiliary-info} & H5-group & Contains anything that the submitter finds helpful to identify, document and repeat the run\\ 
+\textbf{NRtimes} & H5-dataset & \emph{optional but highly recommended:} 1-d array of the discrete times $t_{\rm GW}$ that formed the input-times into the romSpline compression of
+ {\tt amp\textunderscore l\#1\textunderscore m\#2} and {\tt phase\textunderscore \#1\textunderscore m\#2} \\ \hline
 
 \multicolumn{3}{|l|}{
   \rule[-.7em]{0pt}{2em}
-       {\bf GW waveform modes:} \emph{Two groups for each \boldmath$(\ell, m)$, $2\le \ell\le L_{\rm max}$, $-\ell\le m\le +\ell$}}\\ \hline
+       {\bf GW modes:} \emph{Two groups for each \boldmath$(\ell, m)$, $2\le \ell\le L_{\rm max}$, $-\ell\le m\le +\ell$}}\\ \hline
 \textbf{amp\textunderscore l\#1\textunderscore m\#2} & romSpline-group & amplitude $A_{\ell m}(t_{\rm GW})$  \\
 \textbf{phase\textunderscore  l\#1\textunderscore m\#2} & romSpline-group  & phase $\Phi_{\ell m}(t_{\rm GW})$
 \\ \hline 
@@ -577,40 +573,39 @@ Sec.~\ref{sec:spline} for details). \\
 
 \multicolumn{3}{|l|}{
   \rule[-.7em]{0pt}{2em}
-       {\bf if Format \boldmath $\mathbf{\ge 2}$, also specify}}\\ \hline
-\textbf{mass1-vs-time} & romSpline-group & BH-mass $M_1(t)$ \\
-\textbf{mass2-vs-time} & romSpline-group & BH-mass $M_2(t)$ \\
-\textbf{spin1x-vs-time} & romSpline-group & components of BH-spin $\vec\chi_1(t)$\\
-\textbf{spin1y-vs-time} & romSpline-group & \\
-\textbf{spin1z-vs-time} & romSpline-group & \\
-\textbf{spin2x-vs-time} & romSpline-group & components of BH-spin $\vec\chi(t)$ \\
-\textbf{spin2y-vs-time} & romSpline-group & \\
-\textbf{spin2z-vs-time} & romSpline-group & \\
-\textbf{position1x-vs-time} & romSpline-group & components of BH-center $\vec c_1(t)$ \\
-\textbf{position1y-vs-time} & romSpline-group & \\
-\textbf{position1z-vs-time} & romSpline-group & \\
-\textbf{position2x-vs-time} & romSpline-group & components of BH-center $\vec c_2(t)$ \\
-\textbf{position2y-vs-time} & romSpline-group & \\
-\textbf{position2z-vs-time} & romSpline-group & \\
-\textbf{LNhatx-vs-time} & romSpline-group & components of Newtonian angular momentum direction, $\hat L_N(t)$\\
-\textbf{LNhaty-vs-time} & romSpline-group & \\
-\textbf{LNhatz-vs-time} & romSpline-group & \\
-\textbf{Omega-vs-time} & romSpline-group & dimensionless orbital frequency $M\Omega(t)$  \red{or $\Omega(t)$ ??}\\ 
+       {\bf iI Format \boldmath $\mathbf{\ge 2}$, also specify the following time-series:}}\\ \hline
+\textbf{mass1-vs-time} & romSpline-group & mass of the more massive object \\
+\textbf{mass2-vs-time} & romSpline-group & mass of the less massive object \\
+\textbf{spin1x-vs-time} & romSpline-group & x-component of the dimensionless spin $\vec\chi_1(t)$\\
+\textbf{spin1y-vs-time} & romSpline-group & y-component of the dimensionless spin $\vec\chi_1(t)$\\
+\textbf{spin1z-vs-time} & romSpline-group & z-component of the dimensionless spin $\vec\chi_1(t)$\\
+\textbf{spin2x-vs-time} & romSpline-group & x-components of the dimensionless spin $\vec\chi_2(t)$ \\
+\textbf{spin2y-vs-time} & romSpline-group & y-components of the dimensionless spin $\vec\chi_2(t)$\\
+\textbf{spin2z-vs-time} & romSpline-group & z-components of the dimensionless spin $\vec\chi_2(t)$\\
+\textbf{position1x-vs-time} & romSpline-group & x-component of the center $\vec c_1(t)$ of object1 \\
+\textbf{position1y-vs-time} & romSpline-group & y-component of the center $\vec c_1(t)$ of object1\\
+\textbf{position1z-vs-time} & romSpline-group & z-components of the center $\vec c_1(t)$ of object1\\
+\textbf{position2x-vs-time} & romSpline-group & x-component of the center $\vec c_2(t)$ of object2\\
+\textbf{position2y-vs-time} & romSpline-group & y-component of the center $\vec c_2(t)$ of object2\\
+\textbf{position2z-vs-time} & romSpline-group & z-component of the center $\vec c_2(t)$ of object2\\
+\textbf{LNhatx-vs-time} & romSpline-group & x-component of Newtonian angular momentum direction $\hat L_N(t)$\\
+\textbf{LNhaty-vs-time} & romSpline-group & x-component of Newtonian angular momentum direction $\hat L_N(t)$\\
+\textbf{LNhatz-vs-time} & romSpline-group & x-component of Newtonian angular momentum direction $\hat L_N(t)$\\
+\textbf{Omega-vs-time} & romSpline-group & dimensionless orbital frequency $M\Omega(t)$ \\ 
 
 \hline
 
 \multicolumn{3}{|l|}{
   \rule[-.7em]{0pt}{2em}
-       {\bf if Format \boldmath $\mathbf{\ge 3}$, also specify}}\\ \hline
+       {\bf If Format \boldmath $\mathbf{\ge 3}$, also specify the following time-series}}\\ \hline
 
-\textbf{remnant-mass-vs-time} & romSpline-group &  $M_{\rm remnant}(t)$\\
-\textbf{remnant-spinx-vs-time} & romSpline-group & components of $\vec\chi_{\rm remnant}(t)$\\
-\textbf{remnant-spiny-vs-time} & romSpline-group & \\
-\textbf{remnant-spinz-vs-time} & romSpline-group & \\
-\textbf{remnant-positionx-vs-time} & romSpline-group & components of BH-center $\vec c_{\rm remnant}(t)$ \\
-\textbf{remnant-positiony-vs-time} & romSpline-group &\\
-\textbf{remnant-positionz-vs-time} & romSpline-group &
-
+\textbf{remnant-mass-vs-time} & romSpline-group &  remnant mass\\
+\textbf{remnant-spinx-vs-time} & romSpline-group & x-component of the dimensionless spin of the remnant \\
+\textbf{remnant-spiny-vs-time} & romSpline-group & y-component of the dimensionless spin of the remnant \\
+\textbf{remnant-spinz-vs-time} & romSpline-group & z-component of the dimensionless spin of the remnant \\
+\textbf{remnant-positionx-vs-time} & romSpline-group & x-component of the center of the remnant \\
+\textbf{remnant-positiony-vs-time} & romSpline-group & y-component of the center of the remnant \\
+\textbf{remnant-positionz-vs-time} & romSpline-group & z-component of the center of the remnant 
 \end{longtable}
 
 
@@ -968,14 +963,16 @@ The dimensionless spin vectors of the two bodies,
 \end{equation}
 the direction from body 2 to body 1,
 \begin{equation}
-  \nNR(t);
+\label{eq:nhat}
+  \nNR(t) := \frac{\vec{c}_1 - \vec{c}_2}{|| \vec{c}_1 - \vec{c}_2 ||},
 \end{equation}
+where $\vec{c}_i$ is the coordinate centre of the horizon of the i-th body;
 the direction of the Newtonian orbital angular momentum,
 \begin{equation}
-  \hat L(t).
+  \hat L_N(t).
 \end{equation}
 We do {\bf not} make any assumption about the relation of the
-NR-orbital angular momentum vector $\lNR$ relative to the NR
+NR orbital angular momentum vector $\lNR$ relative to the NR
 coordinates\footnote{The customary choice of many NR groups is to
   \emph{start} NR simulations with $\lNR=\EzNR$.  Because of
   junk-radiation and precession effects, $\lNR(t)$ will deviate from
@@ -987,19 +984,15 @@ One can further define an orbital frequency
   \vec\Omega_\mathrm{orb}(t) = \nNR(t) \times \frac{d\nNR(t)}{dt}.
 \end{equation}
 
-\harald{Equations~(\ref{eq:chi})--(\ref{eq:Omega}) are defined in the
+Equations~(\ref{eq:chi})--(\ref{eq:Omega}) are defined in the
 strong-field region near the black holes, and are given as a function
 of the time-coordinate $t$ employed by the NR simulation in the strong
 field regime. 
 The time-coordinates $\tGW$ and $t$ are defined at different regions
 of the space-time (far-zone vs. near-zone), and their preferred relative
-alignment is discussed on page~\ref{tGW-vs-tNR}. \sout{
-Sometimes it is desirable
-to relate these two time-coordinates to each other, e.g. to make a
-statement about the dynamical state of the binary at the time ``when a
-certain GW-frequency is reached''.}  Any relation between $\tGW$ and
+alignment is discussed on page~\ref{tGW-vs-tNR}. Any relation between $\tGW$ and
 $t$, however, is ambiguous.  Often NR simulations employ an approximation of
-``retarded time'', i.e.}
+``retarded time'', i.e.
 \begin{equation}
   \label{eq:tretarted}
   \tGW = t\big|_{\rm retarted}.
@@ -1467,7 +1460,7 @@ The current implementation still suffers from a few caveats and drawbacks. As op
 %%%%%%%%%%%%%%%%%%%%%%%%%Acknowledgements%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
 We are grateful to Mark Hannam for many useful discussions and comments throughout the code review.
-We also thank Kent Blackburn and James Healy for providing useful comments on the manuscript, and \harald{Ian Hinder}, Geoffrey Lovelace and Deirdre Shoemaker for input into the metadata discussion.
+We also thank Kent Blackburn and James Healy for providing useful comments on the manuscript, and Ian Hinder, Geoffrey Lovelace and Deirdre Shoemaker for input into the metadata discussion.
 Many thanks for discussions regarding the frame coordinate transformations to Stas Babak, Jolien Creighton, Michael P\"urrer and Riccardo Sturani.
 %%%%%%%%%%%%%%%%%%%%%%%%%Appendices%%%%%%%%%%%%%%%%%%%%%%%%
 
