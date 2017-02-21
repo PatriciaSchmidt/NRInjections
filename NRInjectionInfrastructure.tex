@@ -167,29 +167,29 @@ in several significant ways. First, data is stored in a highly efficient compres
 Second, the compressed NR data are interpolated with one-dimensional spline interpolation \emph{after} the mass scale is inserted. This avoids high-memory operations and further reduces storage requirements and I/O times. Third, the new infrastructure handles projection of the NR data onto arbitrary source-location and detector orientation using the same conventions in LAL as for other waveform families entirely agnostic of the NR code that was used to produce the simulation. The new injection infrastructure is fully implemented in LAL and is intended to supersede previously used NR modules.
 
 The remainder of this technical document is organised as follows: In Sec. \ref{sec:format} we provide a brief summary
-of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we describe the basics of the waveform generation code and give explicit examples of how the NR waveforms are evaluated in \texttt{lalsimulation}. Sec. \ref{sec:coordinates} details the frame transformations between the NR frame and the LAL wave-frame. We highlight caveats and desired future improvements in Sec.~\ref{sec:discussion}.
+of the NR data format and metadata required as input. In Sec. \ref{sec:gen} we describe the basics of the waveform evaluation code and give explicit examples of how the NR waveforms are evaluated in \texttt{lalsimulation}. Sec. \ref{sec:coordinates} details the frame transformations between the NR frame and the LAL wave-frame. We highlight caveats and desired future improvements in Sec.~\ref{sec:discussion}.
 
 %%%%%%%%%%%%%%%
 \section{Waveform format}
 \label{sec:format}
 %%%%%%%%%%%%%%%
-
-
-\harald{All data for one NR simulation is provided in one hdf5-file.
-  This file contains
-  \begin{itemize}
+All data for \emph{one} NR simulation is provided in a single HDF5-file.
+  This file contains:
+  \begin{enumerate}
     \item The gravitational waveforms given as spherical-harmonic
       modes in a spline-compressed format.
     \item Metadata describing the simulation, and identifying the
       origin of the simulation.
       \item Optionally, additional information about the dynamics of
         the black holes.
-  \end{itemize}
-When multiple sets of waveform-modes are to be provided for the
-identical phsysical configuration (e.g. during a convergence test, or
-for different choices during GW extraction), then each set of
-waveform-modes needs to be stored in a separate .h5 file.}
-
+  \end{enumerate}
+When multiple \red{NR data sets} \sout{sets of waveform-modes} for the
+identical physical configuration (e.g. during a convergence test, or
+for different choices during GW extraction) are provided, then each \red{NR data set 
+including metadata} \sout{set of
+waveform-modes} needs to be stored in a separate .h5 file \red{with a unique name}.
+\patricia{Harald, I made a few changes here to avoid people thinking that HDF5 files with
+\emph{only} the modes are ok. I tried to make this more explicit.}
 
 
 %%%%%%%%%%%%%%%%
@@ -212,7 +212,7 @@ h = h_+ - i h_\times \in \mathbb{C},
 \end{equation}
 where $h_+, h_\times \in \mathbb{R}$. 
 
-Let $( \ExNR, \EyNR, \EzNR)$ be a Cartesian coordinate system in the \emph{wave-zone}, i.e. the zone far away from the binary where the GWs are extracted\harald{\sout{, and $\tGW$ the corresponding far-zone time coordinate}}. This Cartesian coordinate system is related to the polar coordinates $(r, \theta, \phi)$ by the standard transformation. In this coordinate system, henceforth referred to as the NR frame, the metric perturbation is commonly decomposed into \emph{modes}
+Let $( \ExNR, \EyNR, \EzNR)$ be a Cartesian coordinate system in the \emph{wave-zone}, i.e. the zone far away from the binary where the GWs are extracted. This Cartesian coordinate system is related to the polar coordinates $(r, \theta, \phi)$ by the standard transformation. In this coordinate system, henceforth referred to as the NR frame, the metric perturbation is commonly decomposed into \emph{modes}
 in a basis of spin-weighted spherical harmonics, ${}^{-2}Y_{\ell m}$, of spin weight $s=-2$, where the GW propagation direction is the radial unit vector $\hat{r}$.
 For any point $(\theta, \phi)$ on the unit sphere, the GW strain takes the form
 \begin{equation}
@@ -220,8 +220,8 @@ For any point $(\theta, \phi)$ on the unit sphere, the GW strain takes the form
 h^\mathrm{NR}(\tGW; \theta, \phi) = h^\mathrm{NR}_+ - i h^\mathrm{NR}_\times = \sum_{\ell=2}^\infty \sum_{m=-\ell}^{\ell} H_{\ell m}(\tGW) {}^{-2}Y_{\ell m}(\theta,\phi),
 \end{equation}
 where $H_{\ell m}(\tGW)$ denotes the extracted NR gravitational-wave modes.
-\harald{The modes are given in terms of a retarded time-coordinate
-  $t_{\rm GW}$}.
+The modes are given in terms of a retarded time-coordinate
+  $t_{\rm GW}$.
 As for any wave, we can also write each mode $H_{\ell m}(\tGW)$ as an amplitude $A_{\ell m}(\tGW)$ and a phase
 $\Phi_{\ell m}(\tGW)$,
 \begin{equation}
@@ -236,15 +236,15 @@ Following the LAL waveform convention, the time-coordinate $\tGW$ in the wavefor
 h_\mathrm{peak} := \max \left( \sum_{\ell, m} A_{\ell m}(\tGW)^2 \right).
 \end{equation}
 
-\harald{Note that the time coordinate $\tGW$ in the wave-zone is not
-  identical to time coordinate $t$ used by the numerical
+Note that the time coordinate $\tGW$ in the wave-zone is not
+  identical to time coordinate $t_\mathrm{NR}$ used by the numerical
   relativity simulation in the strong-field regime, the latter is used
-  below to give information about the dynamics of the black holes
-  (e.g. {\tt spin1x-vs-time}).  There is no unambiguous identification
-  of $t_{\rm GW}$ qith $t$, since they are defined in
+  below to give information about the dynamics of the black holes.  
+  There is no unambiguous identification
+  of $t_{\rm GW}$ with $t$, since they are defined in
   different regions of the space-time (far-zone vs. near-zone).  The
   normalization of $t_{\rm GW}$ is given by Eq.~(\ref{eq:peak}); we
-  describe on page~\pageref{tGW-vs-tNR} how to choose $t$.}
+  describe on page~\pageref{tGW-vs-tNR} how to choose $t$.
  
 
 %%%%%%%%%%%%%%%
@@ -273,13 +273,13 @@ i.e., if the spline is evaluated at the original discrete NR times $\tGW$, the o
 For a detailed description of this method and the accuracy of the obtained interpolants, we refer the reader to~\cite{Galley:2016mvy}. The spline compression is conveniently performed using the publicly available Python package \texttt{romSpline} by Chad R. Galley~\cite{romspline}. The spline interpolants for each amplitude and phase are obtained via \verb"romSpline" as follows: 
 \begin{alltt}
 import romSpline 
-spline = romSpline.ReducedOrderSpline(\(t\), \(A\sb{\ell,m}(\tGW) or \Phi\sb{\ell,m}(\tGW)\), verbose=False)
+spline = romSpline.ReducedOrderSpline(\(\tGW\), \(A\sb{\ell,m}(\tGW) or \Phi\sb{\ell,m}(\tGW)\), verbose=False)
 spline.write('filename.h5')
 \end{alltt}
-The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series data and is composed of five datasets: (deg, tol, X, Y, errors)\footnote{\harald{The latest version of {\tt romSpline} allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file.}}.
+The output of \texttt{spline.write} contains all information needed for subsequent interpolation of the respective input time-series data and is composed of five datasets: (deg, tol, X, Y, errors)\footnote{The latest version of {\tt romSpline} allows to pass a group descriptor, so that the spline-data can be written directly into the appropriate group of the final output file.}.
 
-The spline interpolants for each $(\ell,m)$ mode for a single NR
-simulations are stored stored as individual H5-groups in the
+The spline interpolants for each $(\ell,m)$-mode for a single NR
+simulation are stored as individual H5-groups in the
 \emph{final HDF5 output file} under the group-names given below in Sec.~\ref{sec:format:groups}.
 
 
@@ -322,7 +322,7 @@ Required time-dependent metadata (see list below) have to contain the values cor
 
 Vectors must be represented by their Cartesian components in the NR frame (see Sec.~\ref{sec:NRconv}). This coordinate system is consistent with the one used in the decomposition in spherical harmonics (e.g. the polar axis of the spherical harmonics must point along the +z-axis). No requirements are placed on the orientation of the NR frame. For instance, the orbital unit separation vector 'nhat' and the Newtonian unit orbital angular momentum 'LNhat' need not point along specific coordinate axes. Note also that the spin-fields in the metadata 'spin\{1,2\}\{x,y,z\}' are given in the NR frame, and \emph{not} in the LAL frame. The rotation of the GW modes into the LAL frame is taken care of by the NR injection infrastructure, following the conventions described in Sec.~\ref{sec:coordinates}. 
 
-\harald{Note: The time-coordinate of spins, positions, masses and their
+Note: The time-coordinate of spins, positions, masses and their
 respective time-series will be associated with the apparent horizon,
 e.g. the NR coordinate time $t$. Such a time cannot
 unambiguously be identified with the retarded time $\tGW$ of the
@@ -332,17 +332,16 @@ However, the submitter is asked to make a {\bf reasonable
 effort to have the same numerical values of $t$ and $\tGW$
 to correspond to the same portion of the waveform}, e.g. through
 choosing $\tGW = t - R^*_\mathrm{extraction}$, where
-$R^*_\mathrm{extraction}$ is the tortoise radius of the extraction sphere~\cite{Fiske:2005fx,Boyle:2009vi}.}  \\
+$R^*_\mathrm{extraction}$ is the tortoise radius of the extraction sphere~\cite{Fiske:2005fx,Boyle:2009vi}. \\
 \newline
-%Three versions of .h5 files, specified by the attribute `Format', are compatible. All of them require the following metadata stored as attributes of the .h5 file: \\
 
 \noindent
 
-\renewcommand*{\arraystretch}{1.3} % extra spacing between entries
+\renewcommand*{\arraystretch}{1.5} % extra spacing between entries
 \begin{longtable}{|p{3.4cm}|p{1.6cm}|p{11.2cm}|}
-  \hline  \emph{attribute-name} & \emph{type} & \emph{description} \\ \hline
+  \hline  \emph{Attribute-name} & \emph{Type} & \emph{Description} \\ \hline
   \endhead
-  \hline  \emph{attribute-name} & \emph{type} & \emph{description} \\ \hline
+  \hline  \emph{Attribute-name} & \emph{Type} & \emph{Description} \\ \hline
 \endfirsthead
 \hline 
  \multicolumn{3}{r}{\emph{continued}}
