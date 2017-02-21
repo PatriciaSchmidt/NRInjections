@@ -126,11 +126,11 @@ LIGO-T1500606-v6
 \begin{abstract}
 \label{sec:abs}
 %%%%%%%%%%%%%%%
-This document describes the new NR injection infrastructure in the LIGO Algorithms Library (LAL), 
-which henceforth allows for the usage of Numerical Relativity (NR) waveforms as a discrete waveform approximant
+This document describes the new Numerical Relativity (NR) injection infrastructure in the LIGO Algorithms Library (LAL), 
+which henceforth allows for the usage of NR waveforms as a discrete waveform approximant
 in LAL. With this new interface, NR waveforms provided in the described format can directly be
-used as mock GW signals (``injections'') for LIGO data analyses, which include parameter estimation, searches, hardware
-injections etc. As opposed to the previous infrastructure, this new interface natively handles higher-order modes and waveforms from numerical simulations of precessing binary black holes, making them directly accessible to LIGO analyses. To correctly handle precessing simulations, the new NR injection infrastructure takes care of waveform frame conventions and transforms the NR data into the coordinate frame convention used in LAL. 
+used as simulated GW signals (``injections'') for data analyses, which include parameter estimation, searches, hardware
+injections etc. As opposed to the previous infrastructure, this new interface natively handles sub-dominant modes and waveforms from numerical simulations of precessing binary black holes, making them directly accessible to LIGO analyses. To correctly handle precessing simulations, the new NR injection infrastructure internally transforms the NR data into the coordinate frame convention used in LAL. 
 \end{abstract}
 
 %%%%%%%%%%%%%%%
