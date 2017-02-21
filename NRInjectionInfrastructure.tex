@@ -126,11 +126,11 @@ LIGO-T1500606-v6
 \begin{abstract}
 \label{sec:abs}
 %%%%%%%%%%%%%%%
-This document describes the new NR injection infrastructure in the LIGO Algorithms Library (LAL), 
-which henceforth allows for the usage of Numerical Relativity (NR) waveforms as a discrete waveform approximant
+This document describes the new Numerical Relativity (NR) injection infrastructure in the LIGO Algorithms Library (LAL), 
+which henceforth allows for the usage of NR waveforms as a discrete waveform approximant
 in LAL. With this new interface, NR waveforms provided in the described format can directly be
-used as mock GW signals (``injections'') for LIGO data analyses, which include parameter estimation, searches, hardware
-injections etc. As opposed to the previous infrastructure, this new interface natively handles higher-order modes and waveforms from numerical simulations of precessing binary black holes, making them directly accessible to LIGO analyses. To correctly handle precessing simulations, the new NR injection infrastructure takes care of waveform frame conventions and transforms the NR data into the coordinate frame convention used in LAL. 
+used as simulated GW signals (``injections'') for data analyses, which include parameter estimation, searches, hardware
+injections etc. As opposed to the previous infrastructure, this new interface natively handles sub-dominant modes and waveforms from numerical simulations of precessing binary black holes, making them directly accessible to LIGO analyses. To correctly handle precessing simulations, the new NR injection infrastructure internally transforms the NR data into the coordinate frame convention used in LAL. 
 \end{abstract}
 
 %%%%%%%%%%%%%%%
@@ -153,14 +153,13 @@ Numerical Relativity already plays a crucial role in GW data analysis: the const
 
 In the Advanced detector era, it is very advantageous to be able to directly use NR waveforms in gravitational-wave searches and parameter estimation, to test General Relativity and to assess the systematics of analytic waveforms models within a uniform framework. Such use of NR waveforms should be easy and convenient.
 This is the purpose of the new \emph{Numerical Relativity Injection Infrastructure} described in this document. Once the NR data is provided in a specific format (as described below), this infrastructure allows for the treatment of
-NR waveforms as a ``discrete'' waveform approximant, which can seamlessly be called from within the LIGO Algorithm Library (LAL)\footnote{Available at \url{https://www.lsc-group.phys.uwm.edu/daswg/projects/lalsuite.html}}.
-\patricia{Is this the appropriate reference?}
+NR waveforms as a ``discrete'' waveform approximant, which can seamlessly be called from within the LIGO Algorithm Library (LAL)\footnote{Available at \url{https://wiki.ligo.org/DASWG/LALSuite}}.
 
 In previous efforts, binary-black-hole (BBH) hybrid waveforms constructed by combining a PN inspiral with an NR merger-ringdown waveform, were used in LIGO data analysis and parameter estimation in the NINJA and NINJA-2 projects~\cite{Aylott:2009ya, Aasi:2014tra}.  
 However, the previously employed NR modules in LAL
 %data format~\cite{Brown:2007jx} 
 require the NR waveforms to be resampled at a uniform time-spacing. In the NINJA framework, the resampling was performed \emph{before} inserting the total mass scale. For the waveforms to be
-useable at high total mass, the time-spacing in the NR data has to be very small, resulting in very large storage requirements, even if only the dominant harmonics $(\ell,m)=(2,\pm 2)$ is supplied.
+useable at high total mass, the time-spacing in the NR data has to be very small, resulting in very large storage requirements, even if only the dominant harmonics $(\ell,m)=(2,\pm 2)$ are supplied.
 
 The new infrastructure described here improves on the earlier approaches
 in several significant ways. First, data is stored in a highly efficient compressed format~\cite{Galley:2016mvy}; even including a large number of sub-dominant modes (as is now encouraged), storage requirements are lower than just for the dominant modes in the preceding storage format.  
@@ -672,7 +671,7 @@ Sec.~\ref{sec:spline} for details). \\
 \section{NR waveform evaluation in LAL}
 \label{sec:gen}
 %%%%%%%%%%%%%%%
-Once the HDF5 file has been provided, the NR waveforms can be evaluated through the standard waveform interfaces \texttt{ChooseTDWaveform} in LAL and \texttt{get\textunderscore td\textunderscore waveform} in PyCBC~\cite{Canton:2014ena}. The approximant name is ``NR\textunderscore hdf5''. 
+Once the HDF5 file has been provided, the NR waveforms can be evaluated through the standard waveform interfaces \texttt{ChooseTDWaveform} in LAL. The approximant name is ``NR\textunderscore hdf5''. 
 The spline data are read from file and evaluated for the desired extrinsic parameters, total mass and starting frequency. Since some intrinsic parameters of an NR simulations are fixed (e.g. mass-ratio and dimensionless spins), internal checks on the mass ratio and the spin components are performed to guarantee the consistency between the values passed in the waveform generation call and metadata values. 
 Note: The waveform generator requires the input spin values to be defined as given by Eqn.~(\ref{eq:SpinConsistency}). In general, these are different to the values of the spin metadata and need to be computed using the metadata for the spins, the orbital angular momentum and the orbital separation. The function \texttt{SimInspiralNRWaveformGetSpinsFromHDF5File} returns the spins the required convention. 
 
@@ -698,22 +697,26 @@ Note that all waveform modes $(\ell, m)$ present in the HDF5 file are used
 to compute the two polarisations. The algorithm will incorporate any mode between $\ell =2$ and $\ell =8$ if present in the
 HDF5 file but at least the $(\ell=2, m=2)$ has to be present in the NR data file. 
 
-The compressed NR data files do not store the splines themselves, but the X-data, Y-data, errors, the polynomial degree etc. In the PyCBC implementation,
-the splines are constructed from the HDF5 file via the python function \texttt{UnivariateSpline}, in the LAL implementation regular GSL interpolation
-is performed. Fig.~\ref{fig:waveforms} shows an example comparison between NR waveforms obtained using the pyCBC and the LAL waveform generators. The mismatch
-between the waveforms is less than $10^{-7}$. This is consistent with the level of disagreement expected due to the different numerical interpolation
-routines. \\
+The compressed NR data files do not store the splines themselves, but the X-data, Y-data, errors, the polynomial degree etc.  A regular GSL interpolation
+is used to construct the splines from the HDF5 file. A comparison with the
+scipy function \texttt{UnivariateSpline} found that the mismatch between
+waveforms reconstructed using the two different interpolators was less than
+$10^{-7}$. This is consistent with the level of disagreement expected due to the different numerical interpolation routines. Fig.~\ref{fig:waveforms}
+shows an example comparison between NR waveforms obtained using the two
+different interpolation routines.
 The source code can be found in \texttt{lalsuite/lalsimulation/src/LALSimIMRNRWaveforms.c}.
 
 
 %%%%%%%%%%
 \subsection{Examples}
 %%%%%%%%%%
-There are a variety of different ways to evaluate NR waveforms using LIGO data analysis software. Here, we give two explicit examples
-for function calls in Python: The first example uses the uses the SWIG-wrapped version of \texttt{lalsimulation}, the second one the PyCBC implementation.
+There are a variety of different ways to evaluate NR waveforms using LIGO data analysis software. Here, we give an explicit example
+using python and the SWIG-wrapped version of \texttt{lalsimulation}.
+The only difference between this and generating a waveform using any other
+waveform model is that the path to the HDF5 file must be provided explicitly,
+as illustrated.
 
-\begin{enumerate}
-
+\begin{itemize}
 \item Using \texttt{lalsimulation} through SWIG:
 \begin{alltt}
 import lal
@@ -734,21 +737,7 @@ hp, hc = lalsim.SimInspiralChooseTDWaveform(mass1 * MSUN_SI,
               fStart, fRef,
               params, approximant=lalsim.NR_hdf5)
 \end{alltt}
-
-\item Using the PyCBC function \texttt{get\textunderscore td\textunderscore waveform}:
-\patricia{Ian, please make sure that this is still correct!}
-\begin{alltt}
-from pycbc.waveform import get_td_waveform 
-hp, hc = get_td_waveform(approximant='NR_hdf5', 
-                         numrel_data='/PATH/TO/H5File',
-                         mass1, mass2,
-                         s1x, s1y, s1z,
-                         s2x, s2y, s2z, 
-                         deltaT, fStart, fRef,
-                         inclination, distance, 
-                         phiRef)
-\end{alltt}
-\end{enumerate}
+\end{itemize}
 Fig.~\ref{fig:waveforms} shows the two waveform polarizations $h_+$ and $h_{\times}$ for the precessing binary black hole hole simulated in case 
 SXS:BBH:0006 from the publicly available SXS catalogue~\cite{Mroue:2013xna} for a total mass of 50 $\mathrm{M}_\odot$ and an inclination of $\pi/3$. The dimensionless spins for this simulation in the LAL frame are 
 $\vec{\chi}_1=(-0.05, -0.27, -0.16)$ and $\vec{\chi}_2=(-0.02, -0.11, -0.10)$ and the component masses are $m_1=28.68$ and $m_2=21.32$. The waveform is generated from its beginning, corresponding to the starting frequency of fStart=18.76Hz.
@@ -758,7 +747,7 @@ Further parameters are: distance=100Mpc, deltaT=1.0/16384, phiRef=0 and fRef=fSt
 \includegraphics[width=80mm]{lalsim_SXS6.pdf}
 \includegraphics[width=80mm]{pycbc_SXS6.pdf}
 \caption{The waveform polarizations $h_+$(red) and $h_\times$(blue) of the publicly available SXS waveform SXS:BBH:0006
-generated via the waveform interface in \texttt{lalsimulation} (left panel) and in PyCBC (right panel). }
+generated via the waveform interface in \texttt{lalsimulation} (left panel) and constructed using scipy's \texttt{UnivariateSpline} function(right panel). }
 \label{fig:waveforms}
 \end{center}
 \end{figure}
