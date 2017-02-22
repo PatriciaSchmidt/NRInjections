@@ -119,7 +119,7 @@
 %\date{\today}
 
 \begin{flushright}
-LIGO-T1500606-v6
+LIGO-T1500606-v7
 \end{flushright}
 
 %%%%%%%%%%%%%%%
@@ -182,13 +182,10 @@ All data for \emph{one} NR simulation is provided in a single HDF5-file.
       \item Optionally, additional information about the dynamics of
         the black holes.
   \end{enumerate}
-When multiple \red{NR datasets} \sout{sets of waveform-modes} for the
+When multiple NR datasets for the
 identical physical configuration (e.g. during a convergence test, or
-for different choices during GW extraction) are provided, then each \red{NR dataset 
-including metadata} \sout{set of
-waveform-modes} needs to be stored in a separate .h5 file \red{with a unique name}.
-\patricia{Harald, I made a few changes here to avoid people thinking that HDF5 files with
-\emph{only} the modes are ok. I tried to make this more explicit.}
+for different choices during GW extraction) are provided, then each NR dataset 
+including metadata needs to be stored in a separate .h5 file with a unique name.
 
 
 %%%%%%%%%%%%%%%%
@@ -299,9 +296,7 @@ simulation are stored as individual H5-groups in the
  \end{longtable}
  $ $ \\
  Here (\#1, \#2) are placeholders for $(\ell, m)$, e.g., for $(\ell=2, m=-2)$ the group naming convention is phase\textunderscore l2\textunderscore m-2 and amp\textunderscore l2\textunderscore m-2. 
- \patricia{I think it is important to keep the example here to avoid any confusions.}
-%% \patricia{\sout{Is it clear that there is one .h5 file per NR simulation?}} \red{[HP added extra text to start of Sec. II]}
-
+ 
 %% In addition to the amplitude and phase groups, we highly recommend to
 %% also store the NR waveform times $\tGW$, i.e., the one-dimensional
 %% data array containing the original time-steps of the NR data, as a
@@ -1441,7 +1436,7 @@ First, the user must supply the location of the HDF5 file, a functionality which
 previously used in \texttt{lalsimulation}. Secondly, the user must be careful to supply the mass ratio and spin values that
 are consistent with the NR files, and the spin values have to be specified in the LAL source frame (see Eqn. (\ref{eq:SpinConsistency})). 
 
-The current implementation still suffers from a few caveats and drawbacks. As opposed to the continuous waveform approximants, at the moment the metadata are only referring to the beginning of the waveform and not some reference time, which can be chosen freely. While this is not a problem for aligned-spin binaries, this is a big concern for precessing simulations since various quantities, in particular the spins and the orbital angular momentum, are time-dependent. To fully integrate this desired freedom, additional information needs to be incorporated into the HDF5 files \emph{and} the waveform evaluation functions accordingly. Specifically, one needs the time-series of the vectors determining the geometry of the binary: $\lNR(t), \nNR(t), \chi_(t), \chi_2(t)$. Given these time-series, one can interpolate these four vectors to any reference epoch, and then apply the frame transformations at this reference epoch. These are provided in the formats 2 and 3 and \red{we leave it to future upgrades to \texttt{lalsimulation} to allow for this additional functionality to be fully integrated in the waveform evaluation functions}.
+The current implementation still suffers from a few caveats and drawbacks. As opposed to the continuous waveform approximants, at the moment the metadata are only referring to the beginning of the waveform and not some reference time, which can be chosen freely. While this is not a problem for aligned-spin binaries, this is a big concern for precessing simulations since various quantities, in particular the spins and the orbital angular momentum, are time-dependent. To fully integrate this desired freedom, additional information needs to be incorporated into the HDF5 files \emph{and} the waveform evaluation functions accordingly. Specifically, one needs the time-series of the vectors determining the geometry of the binary: $\lNR(t), \nNR(t), \chi_(t), \chi_2(t)$. Given these time-series, one can interpolate these four vectors to any reference epoch, and then apply the frame transformations at this reference epoch. These are provided in the formats 2 and 3 and we leave it to future upgrades to \texttt{lalsimulation} to allow for this additional functionality to be fully integrated in the waveform evaluation functions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%Acknowledgements%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
